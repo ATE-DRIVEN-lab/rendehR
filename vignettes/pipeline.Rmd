@@ -1,0 +1,157 @@
+---
+title: "The pipeline, stage by stage"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{The pipeline, stage by stage}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+`run_one_source()` takes one source from the cohort definition to the harmonized
+tables. Each stage is also a function you can call yourself, and each writes a
+log row so a resumed run knows what is already done.
+
+## The stages
+
+| Stage | Writes |
+|:--|:--|
+| `cache_raw_parquet` | A Parquet copy of the raw CSVs for faster repeated reads |
+| `import_cohort` | The selected cohort and window tables, as Parquet or DuckDB |
+| `run_db` | Loads the cohort tables into PostgreSQL |
+| `run_raw_mods` | Builds the raw modifications eICU needs before concepts |
+| `build_window_tables` | The admission, ICU and visit windows in PostgreSQL |
+| `build_cohort_annotations` | The SCI cohort annotations (SCI profile) |
+| `build_cohort_info` | The generic cohort information table |
+| `run_comorbidities` | Charlson and Elixhauser indices |
+| `run_iss` | Injury severity scores |
+| `run_concepts` | The flat, time-series, duration, derived and user concepts |
+| `run_external_concepts` | Registered external SQL modules |
+| `run_harmonized_tables` | The merged `flat_tab`, `ts_tab` and `dur_tab` |
+
+The dependency order is fixed; selecting a later stage does not build its
+prerequisites. A full run uses the profile's default stages: `"scid"` adds the
+cohort annotations, comorbidities and injury severity, while `"generic"` runs
+the generic cohort information and leaves the two enrichment stages off unless
+asked.
+
+On eICU, `run_raw_mods` builds `medication_mod`, `infusiondrug_mod` and
+`admissiondrug_mod`, which keep the raw columns and add parsed `mod_*` columns
+(drug name, dose or rate, unit, start and stop), and `lab_mod` and
+`respiratorycharting_mod`, which bring FiO2 to percent. Medication orders with
+a blank drug name are named from their drug code through
+`rendehr_eicu_hicl_drugname_lookup.csv`; a file of that name in the project's
+`config/` directory replaces the shipped one.
+
+Rerunning two stages on the demo reports what they did:
+
+
+``` r
+stages <- run_one_source(
+  "mimic_iv_demo",
+  stages = c("run_concepts", "run_harmonized_tables")
+)
+stages[, c("stage", "status", "seconds")]
+#>                   stage  status    seconds
+#> 1          run_concepts success 25.6869235
+#> 2 run_harmonized_tables success  0.8692167
+```
+
+A stage that is already complete can be skipped; `execution_options(overwrite =
+TRUE)` forces it to run again. `run_one_source_test()` runs the same stages but
+also checks their outputs and the pipeline log, which is what the package's own
+tests use.
+
+## Options without a 47-argument call
+
+The direct arguments still work, and the option constructors group them. An
+option object carries only the values you set; everything else keeps the
+receiving stage's default.
+
+
+``` r
+run_one_source(
+  "mimic_iv_demo",
+  stages = "run_concepts",
+  concepts = concept_options(layers = c("flat", "ts")),
+  loading = loading_options(threads = 2),
+  execution = execution_options(overwrite = TRUE)
+)
+```
+
+`concept_options(layers = )` selects concept layers in pipeline order: `flat`,
+`ts`, `dur`, `ehr`, `user`, `external`. Use `stages` for pipeline stages and
+`layers` for concepts; the two are independent. Supplying the same setting both
+directly and inside a group is an error, even when the values agree.
+
+## DuckDB
+
+`engine = "duckdb"` runs `run_db`, `run_raw_mods`, `build_cohort_info` and
+`run_concepts` in DuckDB. The stages that exist only in PostgreSQL
+(`build_cohort_annotations`, `run_comorbidities`, `run_iss`,
+`run_external_concepts`, `run_harmonized_tables`) are skipped with a message
+rather than silently ignored.
+
+
+``` r
+run_one_source("mimic_iv_demo", engine = "duckdb",
+               stages = c("run_db", "build_cohort_info", "run_concepts"))
+```
+
+A DuckDB run is a complete analysis path for the flat, time-series, duration and
+user layers. To continue it in PostgreSQL, run the PostgreSQL plan from
+`run_db()` and reuse the cohort Parquet instead of importing it again.
+
+## Several sources
+
+`run_sources()` calls `run_one_source()` for each source with the same options:
+
+
+``` r
+run_sources(c("mimic_iv_demo", "eicu_demo"))
+```
+
+`merge_sources()` then pools the per-source schemas into one target schema. The
+merge grain is an analysis decision: `analysis_level = "admission"` keeps one
+row per admission (the first ICU stay), `"icu"` keeps one row per ICU stay.
+
+
+``` r
+merge_sources(c("mimic_iv_demo", "eicu_demo"), target_schema = "rendehr")
+```
+
+## Checking the result
+
+The `verify_*()` functions read a schema and report whether its tables have the
+expected shape. They are the quickest check after a run, and the same functions
+the validation levels call.
+
+
+``` r
+con <- connect_postgres(ehr_config()$database$db_name, load_credentials())
+verified <- c(
+  db_load    = verify_db_load(con, "mimic_iv_demo_coh")$ok,
+  cohort     = verify_cohort(con, "mimic_iv_demo_coh")$ok,
+  concepts   = verify_concepts(con, "mimic_iv_demo_coh_concepts")$ok,
+  derived    = verify_handcrafted(con, "mimic_iv_demo_coh_derived")$ok,
+  harmonized = verify_harmonized(con, "mimic_iv_demo_coh_harmonized")$ok
+)
+verified
+#>    db_load     cohort   concepts    derived harmonized 
+#>       TRUE       TRUE       TRUE       TRUE       TRUE
+ehr_disconnect()
+```
+
+Each call returns a list with `ok`, the individual `checks` and their
+`messages`; the vector above keeps the verdicts, and a failure names the table
+and what was missing. The source schemas created by the pipeline are `<source>_coh` (cohort tables), `<source>_coh_concepts`
+(flat, time series and durations), `<source>_coh_derived` (adapted derived
+concepts), `<source>_coh_harmonized` (the three analysis tables) and
+`<source>_coh_ext_external` (external modules).
+
+## Related articles
+
+- `vignette("cohorts")`: the cohort that starts the pipeline
+- `vignette("harmonized-data")`: reading what the last stage wrote
+- `vignette("concepts")`: concept layers and user SQL

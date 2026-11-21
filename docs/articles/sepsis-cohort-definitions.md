@@ -1,0 +1,131 @@
+# Sepsis-3 cohorts across sources
+
+Sepsis-3 is a clinical definition, not an ICD code. rendehR ships one
+implementation per source family so the same rule runs on MIMIC-III,
+MIMIC-IV and eICU, with the source-specific tables and item IDs each
+database needs.
+
+## The definition
+
+The Third International Consensus defines sepsis as suspected infection
+co-occurring with an acute increase in organ dysfunction, measured by
+the SOFA score. The packaged implementation follows the widely used
+operational form:
+
+1.  **Suspected infection.** Pair an antibiotic with a body-fluid
+    culture. If the culture came first, the antibiotic must follow
+    within 72 hours; if the antibiotic came first, the culture must
+    follow within 24 hours. The earlier event of the first qualifying
+    pair is the suspicion time.
+2.  **SOFA.** Compute the six-organ SOFA score over the stay and keep
+    windows with **SOFA ≥ 2 in absolute terms**.
+3.  **Combination.** Keep ICU stays where a qualifying SOFA window falls
+    within −48 to +24 hours of the suspicion time.
+
+The 72-hour and 24-hour windows point in opposite directions on purpose:
+a culture drawn first can be followed by antibiotics for up to 72 hours,
+while an antibiotic given first must be paired with a culture within 24
+hours.
+
+eICU has no culture table equivalent to MIMIC’s, so its implementation
+uses antibiotic-only suspicion (the ricu convention) and its own SOFA
+port. The MIMIC-III implementation includes the SOFA port as well, so
+the absolute SOFA ≥ 2 rule applies on every source, not only the one it
+was written for.
+
+## Using the helper
+
+``` r
+ehr_init_project(
+  "mimic_iv_demo", base_dir = "sepsis-demo",
+  raw_data_root = normalizePath("rendehr-demo/data/source_data")
+)
+```
+
+[`build_sepsis_cohort()`](https://ate-driven-lab.github.io/rendehR/reference/build_sepsis_cohort.md)
+runs the packaged SQL and returns the selected identifiers. With
+`import = FALSE` it writes only a CSV, so you can inspect the cohort
+before committing it to a project:
+
+``` r
+out <- file.path(docs_root, "sepsis-demo/mimic_iv_demo_sepsis3.csv")
+build_sepsis_cohort(
+  "mimic_iv_demo", bundle = "sepsis3",
+  import = FALSE, out_csv = out, show_progress = FALSE
+)
+ids <- read.csv(out)
+nrow(ids)
+#> [1] 62
+length(unique(ids$subject_id))
+#> [1] 47
+head(ids)
+#>   subject_id  stay_id
+#> 1   10007818 32359580
+#> 2   10004720 35009126
+#> 3   10020740 35044342
+#> 4   10002428 38875437
+#> 5   10037975 39061571
+#> 6   10005817 31316840
+```
+
+The result carries the ICU stay and its patient (`stay_id`,
+`subject_id`), matching the unit the definition selects. The same call
+with `import = TRUE` (the default) imports the cohort and its context
+into the project; `import_scope = "hospital"` is the default because a
+sepsis stay is usually analysed with its admission.
+
+## Four variants
+
+| Bundle                    | Selection                                           |
+|:--------------------------|:----------------------------------------------------|
+| `sepsis3`                 | Every qualifying ICU stay                           |
+| `first_sepsis3`           | The patient’s first-ever ICU stay, if it qualifies  |
+| `sepsis3_admission`       | Qualifying suspicion within ±1 day of ICU admission |
+| `first_sepsis3_admission` | Both restrictions                                   |
+
+`first_sepsis3` is the patient’s first ICU stay, not the first septic
+stay, and the eICU ordering of stays across hospitalisations is
+approximate. The four bundles exist because published studies differ on
+the eligibility window and on whether only the first stay counts;
+choosing one explicitly is better than silently inheriting another
+study’s choice.
+
+## Counts on the demos
+
+The bundled SQL was run on all three open demos. The numbers below are
+ICU stays / hospital admissions / patients, where the source has an
+admission identifier:
+
+| Bundle                    | MIMIC-IV demo | MIMIC-III demo |       eICU demo |
+|:--------------------------|--------------:|---------------:|----------------:|
+| `sepsis3`                 |   62 / — / 47 |   95 / 92 / 70 | 448 / 429 / 389 |
+| `first_sepsis3`           |   40 / — / 40 |   66 / 66 / 66 | 353 / 353 / 353 |
+| `sepsis3_admission`       |   59 / — / 45 |   88 / 86 / 66 | 347 / 341 / 311 |
+| `first_sepsis3_admission` |   39 / — / 39 |   61 / 61 / 61 | 283 / 283 / 283 |
+
+The eICU suspicion-only cohort (no SOFA confirmation) is larger: 582 ICU
+stays in 544 admissions and 489 patients. On MIMIC-III the
+suspicion-only cohort has 28 stays, and the modified suspicion
+implementation 109 stays in 102 admissions and 78 patients. These are
+the same definitions the validation compares against ricu, not a
+separate implementation.
+
+## A second implementation in the concept layer
+
+The `ehr` concept layer also contains the MIT-LCP `sepsis3` SQL, adapted
+so it can read rendehR’s harmonized tables. It is a concept, not a
+cohort: use it to compare the packaged cohort with the upstream
+definition, or to study its intermediate tables (SOFA, suspicion). For
+cohort selection, use
+[`build_sepsis_cohort()`](https://ate-driven-lab.github.io/rendehR/reference/build_sepsis_cohort.md);
+for the clinical concepts behind it, use `run_concepts(layers = "ehr")`.
+
+## Related articles
+
+- [`vignette("cohorts")`](https://ate-driven-lab.github.io/rendehR/articles/cohorts.md):
+  the general selection interface this helper wraps
+- [`vignette("concepts")`](https://ate-driven-lab.github.io/rendehR/articles/concepts.md):
+  concept layers, including the `ehr` layer
+- [`vignette("guided-setup-assistant")`](https://ate-driven-lab.github.io/rendehR/articles/guided-setup-assistant.md):
+  generating a project script for a sepsis cohort without writing the
+  calls by hand

@@ -1,0 +1,336 @@
+url: https://ate-driven-lab.github.io/rendehR/
+
+template:
+  bootstrap: 5
+  light-switch: true
+  # the cohort explorer's theme: one slate-blue accent and the system fonts
+  bslib:
+    primary: "#2f5577"
+    secondary: "#5c6670"
+    success: "#2f7d4f"
+    warning: "#9a6b1f"
+    danger: "#a53f3f"
+    info: "#2f5577"
+    base_font: [system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif]
+    heading_font: [system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif]
+    code_font: [ui-monospace, SFMono-Regular, Menlo, Consolas, monospace]
+    font-size-base: 0.9375rem
+
+home:
+  title: "rendehR: multi-source EHR harmonization for ICU research"
+  description: >
+    A cohort-first, provenance-aware R pipeline that downloads, imports,
+    cohort-filters and harmonizes ICU electronic health record data from
+    MIMIC-III, MIMIC-IV and eICU into analysis-ready flat, time-series and
+    duration tables.
+  sidebar:
+    structure: [links, license, community, citation, authors, dev]
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, lightswitch, github]
+  components:
+    intro:
+      text: Get started
+      href: articles/rendehR.html
+    articles:
+      text: Articles
+      menu:
+      - text: Projects and configuration
+        href: articles/projects.html
+      - text: Cohorts
+        href: articles/cohorts.html
+      - text: The pipeline
+        href: articles/pipeline.html
+      - text: Harmonized data
+        href: articles/harmonized-data.html
+      - text: Concepts
+        href: articles/concepts.html
+      - text: Explorer
+        href: articles/explorer.html
+      - text: Sepsis-3 cohorts
+        href: articles/sepsis-cohort-definitions.html
+      - text: Guided setup assistant
+        href: articles/guided-setup-assistant.html
+      - text: Adding a new source
+        href: articles/adding-a-new-source.html
+      - text: MCP server and skills
+        href: articles/mcp.html
+      - text: -------
+      - text: Data sources
+        href: articles/data-sources.html
+      - text: Concept dictionary
+        href: articles/concept-dictionary.html
+      - text: Validation
+        href: articles/validation.html
+      - text: Troubleshooting
+        href: articles/troubleshooting.html
+      - text: Glossary
+        href: articles/glossary.html
+
+articles:
+- title: Getting started
+  navbar: ~
+  contents:
+  - rendehR
+  - projects
+- title: Working with data
+  contents:
+  - cohorts
+  - pipeline
+  - harmonized-data
+  - concepts
+  - explorer
+- title: Special topics
+  contents:
+  - sepsis-cohort-definitions
+  - guided-setup-assistant
+  - adding-a-new-source
+  - mcp
+- title: Reference material
+  contents:
+  - articles/data-sources
+  - articles/concept-dictionary
+  - articles/validation
+  - articles/troubleshooting
+  - articles/glossary
+
+reference:
+- title: Project setup and configuration
+  desc: >
+    Create, load and inspect the project configuration and credentials that
+    every other function reads from.
+  contents:
+  - ehr_config
+  - ehr_use_config
+  - ehr_load_config
+  - ehr_write_config
+  - ehr_check_config
+  - ehr_create_config_template
+  - ehr_config_path
+  - ehr_config_root
+  - ehr_paths
+  - ehr_init_project
+  - ehr_create_credentials_template
+  - load_credentials
+  - set_physionet_env
+  - load_src_cfg
+  - get_dataset_config
+  - get_id_cols
+  - src_family
+  - src_schema_names
+
+- title: Guided assistants
+  desc: Interactive helpers that generate a setup script or scaffold a new source.
+  contents:
+  - ehr_setup_assistant
+  - write_setup_script
+  - ehr_add_source_assistant
+  - ehr_suggest_next
+  - print.ehr_setup_plan
+  - print.ehr_add_source_plan
+  - print.ehr_suggestion
+
+- title: Download raw data
+  desc: Fetch raw source tables from PhysioNet as Parquet.
+  contents:
+  - download_source
+  - download_sources
+
+- title: Cohort definition and materialization
+  desc: >
+    Define the study cohort first, then stream only cohort-relevant rows into
+    Parquet and load them into a database backend.
+  contents:
+  - build_cohort
+  - cohort_key
+  - subset_parquet_by_key
+  - import_cohort_general
+  - cache_raw_parquet_duckdb
+  - cohort_selection_options
+  - build_sepsis_cohort
+  - run_sepsis3_example
+  - select_cohort_ids
+  - print.ehr_selection_plan
+  - run_cohort_info
+  - scid_classify
+  - build_cohort_info
+  - build_cohort_info_general
+  - build_cohort_info_general_duckdb
+  - build_cohort_annotations
+  - build_cohort_annotations_general
+  - load_cohort_parquet_to_postgres
+  - load_cohort_parquet_to_duckdb
+  - materialize_cohort_duckdb
+  - list_example_cohorts
+
+- title: Pipeline stages
+  desc: End-to-end and per-stage runners for one or many sources.
+  contents:
+  - run_one_source
+  - pipeline_options
+  - window_options
+  - loading_options
+  - enrichment_options
+  - concept_options
+  - harmonization_options
+  - execution_options
+  - pipeline_compatibility
+  - run_one_source_test
+  - run_sources
+  - run_scid_example
+  - run_db
+  - run_db_duckdb
+  - run_raw_mods
+  - run_raw_mods_duckdb
+  - run_concepts
+  - build_window_tables
+  - build_icu_windows
+  - build_visit_windows
+
+- title: Clinical concepts
+  desc: >
+    Generate, register, clean and inspect atomic and handcrafted clinical
+    concepts, with concept-level provenance.
+  contents:
+  - extract_concepts
+  - run_atomic_concepts_unified
+  - concept_unit_conversion_func
+  - run_external_concepts
+  - run_flat_sql_concepts
+  - register_concept_sql
+  - register_concept_provenance
+  - list_concepts
+  - search_concepts
+  - concept_summary
+  - clean_by_range
+  - clean_by_outlier
+
+- title: Derived clinical measures
+  desc: Comorbidity indices, injury severity scores and ICU timelines.
+  contents:
+  - run_comorbidities
+  - run_iss
+  - make_icu_timeline
+  - build_eicu_diagnosis_icd_parquet
+
+- title: Harmonization and merging
+  desc: Build flat, time-series and duration outputs and merge them across sources.
+  contents:
+  - harmonize_concepts
+  - run_harmonized_tables
+  - merge_sources
+
+- title: Accessing harmonized data
+  desc: Connect to the database and pull tables, concepts and patients into tibbles.
+  contents:
+  - ehr_connect
+  - ehr_disconnect
+  - list_sources
+  - list_tables
+  - peek_table
+  - fetch_table
+  - fetch_concept
+  - fetch_concepts
+  - fetch_concepts_wide
+  - get_patient_flat
+  - get_patient_ts
+  - load_cohort_info
+  - load_admission_windows
+  - load_icu_windows
+  - load_visit_windows
+  - load_merged_cohort_info
+  - load_merged_flat
+  - load_merged_dur
+  - load_merged_dur_wide
+  - load_merged_ts
+  - load_merged_ts_wide
+  - cohort_summary
+  - browse_source
+  - browse_ehr_db_flex
+  - disconnect_ehr_db
+  - print.ehr_source
+  - print.ehr_db_flex_browser
+
+- title: Patient subgroups and time windows
+  desc: Filter an existing cohort into subgroups and time windows, then materialize them.
+  contents:
+  - build_subcohort
+  - set_active_cohort
+  - active_cohort_info
+  - clear_active_cohort
+  - set_time_window
+  - active_time_window_info
+  - clear_time_window
+  - materialize_subcohort
+  - drop_subcohort
+
+- title: Cohort explorer
+  desc: >
+    Interactive Shiny explorer of a merged schema: cohort overview and
+    filters, Table 1, outcomes and survival, one patient's time series read
+    live, concepts and data quality. Optional study pages (spinal cord injury
+    as the reference example).
+  contents:
+  - run_explorer
+  - explorer_app
+  - explorer_data
+  - explorer_patient_ts
+  - explorer_sci_data
+- title: Writing and exporting
+  desc: Push data back into a schema or export it to Parquet / gzip CSV.
+  contents:
+  - write_table
+  - write_csv_to_schema
+  - write_lookup_table
+  - export_query
+  - export_table_parquet
+  - export_table_csv_gz
+
+- title: Database utilities
+  desc: Low-level PostgreSQL and DuckDB helpers used throughout the pipeline.
+  contents:
+  - connect_postgres
+  - connect_duckdb
+  - ensure_database_exists
+  - create_schemas
+  - create_index
+  - get_table_from_db
+  - run_sql_file
+  - run_sql_dir
+  - adapt_sql_for_duckdb
+  - browse_psql
+  - suggest_match
+
+- title: Dropping objects
+  desc: Safely remove tables, schemas and databases.
+  contents:
+  - drop_table
+  - drop_relation
+  - drop_schema
+  - drop_source_schemas
+  - drop_merged_schema
+  - drop_database
+
+- title: Extending rendehR
+  desc: Register new source families and set up project-specific workspaces.
+  contents:
+  - register_source
+  - list_registered_sources
+  - validate_source_config
+  - add_source_wizard
+  - init_project_schema
+  - clone_source_to_db
+
+- title: Validation
+  desc: Stage-by-stage checks that each pipeline step produced what it should have.
+  contents:
+  - verify_download
+  - verify_cohort
+  - verify_db_load
+  - verify_concepts
+  - verify_handcrafted
+  - verify_harmonized
+  - validate_concepts_against_ricu
+  - validate_concept_config

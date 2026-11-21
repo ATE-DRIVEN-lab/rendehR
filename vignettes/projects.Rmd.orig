@@ -1,0 +1,147 @@
+---
+title: "Projects, configuration and raw data"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Projects, configuration and raw data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+source("precompute-setup.R")
+unlink(file.path(docs_root, c("my-study", "sci-study")), recursive = TRUE)
+```
+
+Every rendehR function works inside a project: a folder with a configuration
+file, credentials, and room for the raw and cohort files. This article shows
+what a project contains, which settings matter, and how several studies can
+share one copy of the raw data.
+
+## The project folder
+
+`ehr_init_project()` creates the folder and its two configuration files. Nothing
+is overwritten if they already exist.
+
+```{r init}
+library(rendehR)
+ehr_init_project(src_name = "mimic_iv_demo", base_dir = "my-study")
+```
+
+```{r tree}
+list.files("my-study", recursive = TRUE, include.dirs = TRUE)
+```
+
+| Path | Holds |
+|:--|:--|
+| `config/ehr_config.json` | Project settings: database, source, paths, cohort profile |
+| `config/config_pass.json` | PostgreSQL and PhysioNet credentials |
+| `data/source_data/<source>/` | Raw files from PhysioNet (unless `raw_data_root` points elsewhere) |
+| `data/cohorts_data/<source>_parquet/` | The cohort, imported to Parquet |
+| `data/duckdb/` | DuckDB files, when you use the DuckDB engine |
+| `sql/<source>/concepts_sqls/user/` | Your own SQL concepts (see `vignette("concepts")`) |
+| `sql/generated/<source>/` | SQL that rendehR generates from the concept dictionary |
+
+Keep `config/config_pass.json` and `data/` out of version control: one holds a
+password, the other patient data.
+
+## The configuration file
+
+```{r config, comment = ""}
+cat(readLines("my-study/config/ehr_config.json"), sep = "\n")
+```
+
+The settings you are most likely to change:
+
+- **`database.db_name`**: the PostgreSQL database for this project. It defaults to
+  `"rendehr"`; give every study its own database. Functions that take `db_name`
+  use this value when you leave it out.
+- **`paths.raw_data_root`**: where the raw files are. `null` means
+  `data/source_data` inside the project. Point it at a shared folder to reuse one
+  download in several projects (below).
+- **`cohort.profile`**: `"generic"` (the default) or `"scid"`, the spinal cord
+  injury reference implementation. The profile decides two defaults. For an SCI cohort selected
+  by diagnosis, `"scid"` adds the injury classification to the cohort table;
+  any other cohort is left alone. And under `"scid"` the pipeline computes the
+  comorbidity indices and injury severity scores unless told not to, while
+  under `"generic"` they run only when asked.
+- **`cohort.icd_filter_path`**: the ICD list used when a call names no cohort.
+
+Relative paths are relative to `project.base_dir`, which `ehr_init_project()`
+writes as an absolute path.
+
+## Credentials
+
+`config_pass.json` holds the PostgreSQL login, and a PhysioNet login for the
+credentialed datasets:
+
+```json
+{
+  "postgres": {"host": "localhost", "port": 5432, "user": "postgres", "password": "..."},
+  "physionet": {"username": "...", "password": "..."}
+}
+```
+
+Environment variables take precedence over the file: `PGHOST`, `PGPORT`, `PGUSER`,
+`PGPASSWORD` and `PGSSLMODE` for PostgreSQL, `PHYSIONET_USER` and
+`PHYSIONET_PASS` for PhysioNet. The demo datasets are open and need no
+PhysioNet login.
+
+## Using a project
+
+`ehr_use_config()` makes a project active for the R session, and
+`ehr_check_config()` reports what the settings resolve to:
+
+```{r use}
+ehr_use_config("my-study/config/ehr_config.json")
+check <- ehr_check_config(quiet = TRUE)
+check$ok
+check$paths$raw_dir
+```
+
+Without an active project, rendehR looks for `config/ehr_config.json` in the
+working directory, so `setwd()` into the project works too. You can also pass
+`base_dir` and `db_name` to each call.
+
+## Raw data
+
+`download_source()` fetches a PhysioNet release into `raw_data_root`. It checks
+each file against the release's SHA-256 manifest, reuses files that already
+match, and resumes interrupted downloads.
+
+```r
+download_source("mimic_iv_demo")       # open
+download_source("mimic_iv")            # needs a credentialed PhysioNet account
+```
+
+The supported releases and their size on disk as downloaded:
+
+| Source | Release | Size |
+|:--|:--|--:|
+| MIMIC-IV demo | 2.2 | 16 MB |
+| MIMIC-III demo | 1.4 | 94 MB |
+| eICU-CRD demo | 2.0.1 | 53 MB |
+| MIMIC-IV | 3.1 | 10 GB |
+| MIMIC-III | 1.4 | 6.2 GB |
+| eICU-CRD | 2.0 | 5.2 GB |
+
+The cohort import can cache the raw CSV as Parquet next to the project
+(`data/raw_parquet_cache/`). That takes about as much space again, and makes
+repeated imports of a full source much faster.
+
+## Several studies, one download
+
+A study is a project: its own cohort, database and settings. Point
+`raw_data_root` at the folder that already holds the files and nothing is
+downloaded twice. Here a second project reuses the demo downloaded in
+`vignette("rendehR")`:
+
+```{r share}
+ehr_init_project(
+  src_name = "mimic_iv_demo", base_dir = "sci-study",
+  raw_data_root = normalizePath("rendehr-demo/data/source_data")
+)
+ehr_check_config(config_path = "sci-study/config/ehr_config.json", quiet = TRUE)$paths$raw_dir
+```
+
+Set a different `db_name` in each project's configuration and the two studies
+never touch each other's tables.

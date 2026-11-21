@@ -1,0 +1,21 @@
+# Normalize line endings: stored as LF in the repo and checked out as LF on
+# every OS, so editor settings never produce whole-file diffs.
+* text=auto eol=lf
+
+*.R   text eol=lf
+*.Rd  text eol=lf
+*.csv text eol=lf
+*.sql text eol=lf
+*.md  text eol=lf
+
+# Binary files: never convert.
+*.rds     binary
+*.rda     binary
+*.RData   binary
+*.parquet binary
+*.duckdb  binary
+*.png     binary
+*.jpg     binary
+*.pdf     binary
+*.zip     binary
+*.gz      binary

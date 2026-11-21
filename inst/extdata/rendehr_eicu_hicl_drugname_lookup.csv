@@ -1,0 +1,703 @@
+"drughiclseqno","drugname","name_rule","rendehr_concept","n_named_rows"
+4,"DIGOXIN","most_common_name",,141
+25,"THEO-24","most_common_name",,5
+57,"ATROVENT","most_common_name",,101
+70,"QVAR","most_common_name",,5
+72,"FLUNISOLIDE","most_common_name",,1
+73,"QUINIDINE GLUCONATE","most_common_name",,2
+75,"QUINIDINE SULFATE","most_common_name",,1
+82,"FLECAINIDE ACETATE","most_common_name",,4
+83,"AMIODARONE","majority_rendehr_concept","amiodarone_exp",247
+84,"MEXILETINE HCL","most_common_name",,1
+89,"HYDRALAZINE","most_common_name",,457
+91,"PRAZOSIN HCL","most_common_name",,2
+93,"MINOXIDIL","most_common_name",,22
+94,"TERAZOSIN HCL","most_common_name",,19
+113,"CLONIDINE HCL 0.1 MG PO TABS","majority_rendehr_concept","clonidine_exp",95
+128,"CAPTOPRIL","majority_rendehr_concept","captopril_exp",2
+130,"VASOTEC","most_common_name",,14
+131,"LISINOPRIL-HYDROCHLOROTHIAZIDE","most_common_name",,9
+132,"LISINOPRIL","most_common_name",,561
+136,"2 ML  -  NITROPRUSSIDE SODIUM 25 MG/ML IV SOLN","majority_rendehr_concept","nitroprusside_exp",6
+147,"TENORETIC 100","most_common_name",,1
+150,"100 ML GLASS CONT : IOPAMIDOL 76 % IV SOLN","most_common_name",,37
+151,"IOHEXOL 350 MG IODINE/ML IV SOLN","most_common_name",,13
+159,"NITROGLYCERIN","majority_rendehr_concept","nitroglycerin_exp",314
+166,"ISORDIL","most_common_name",,5
+168,"DIPYRIDAMOLE","most_common_name",,5
+180,"VERAPAMIL HCL","most_common_name",,7
+181,"PROCARDIA","most_common_name",,21
+182,"DILTIAZEM","majority_rendehr_concept","diltiazem_exp",232
+183,"10 ML  -  NICARDIPINE HCL 2.5 MG/ML IV SOLN","majority_rendehr_concept","nicardipine_exp",10
+187,"SODIUM CHLORIDE","majority_rendehr_concept","nacl_exp",2
+189,"N-ACETYL-L-CYSTEINE","most_common_name",,1
+206,"GUAIFENESIN-CODEINE","most_common_name",,2
+223,"MUCINEX DM","most_common_name",,1
+270,"MUCINEX D","most_common_name",,1
+271,"GUAIFENESIN ER 600 MG PO TB12","most_common_name",,24
+435,"PHENYLEPHRINE HCL/ACETAMINOPHEN/CHLORPHENIRAMINE","majority_rendehr_concept","acetaminophen_exp",1
+517,"ALBUTEROL INH SOLN (VARIABLE DOSE)","most_common_name",,6
+523,"SODIUM BICARBONATE","most_common_name",,150
+525,"1000 ML : LACTATED RINGERS IV SOLN","most_common_name",,381
+532,"POTASSIUM & SODIUM PHOSPHATES 280-160-250 MG PO PACK","most_common_name",,36
+538,"SODIUM CHLORIDE","majority_rendehr_concept","nacl_exp",52
+540,"SODIUM PHOSPHATE 3 MMOL/ML 15 ML INJ","most_common_name",,151
+548,"POTASSIUM CITRATE","most_common_name",,2
+549,"POTASSIUM CHLORIDE","majority_rendehr_concept","kcl_exp",2424
+550,"POTASSIUM","most_common_name",,47
+551,"POTASSIUM PHOSPHATE 3 MMOL/ML15 ML INJ","majority_rendehr_concept","potassium_phosphate_exp",69
+553,"POTASSIUM","most_common_name",,12
+581,"CALCIUM CARBONATE 500 MG CHEW TAB","most_common_name",,29
+582,"10 ML SYRINGE : CALCIUM CHLORIDE 100 MG/ML (10 %) IV SYRG","most_common_name",,75
+585,"CALCIUM GLUCONATE 100 MG/ML IV SOLN","most_common_name",,193
+607,"MAGNESIUM CHLORIDE","most_common_name",,16
+608,"MAGNESIUM GLUCONATE","most_common_name",,1
+609,"MAGNESIUM OXIDE 400 MG TAB","most_common_name",,175
+610,"MAGNESIUM SULFATE 2 GM/50 ML IVPB","majority_rendehr_concept","magnesium_sulfate_exp",615
+629,"PLASMA-LYTE 148 INFUSION","most_common_name",,5
+734,"IRON","most_common_name",,4
+735,"IRON","most_common_name",,5
+739,"FERROUS SULFATE","most_common_name",,50
+745,"ZINC","most_common_name",,1
+755,"COPPER","most_common_name",,1
+768,"INSULIN (REGULAR) 100 UNITS IN 1","majority_rendehr_concept","insulin_exp",408
+780,"NOVOLIN N","most_common_name",,8
+802,"GLYBURIDE","most_common_name",,8
+803,"GLIPIZIDE","most_common_name",,33
+807,"GLUCOSE 15 GRAM/60 ML BQ LIQ","most_common_name",,423
+858,"LYSINE","most_common_name",,1
+873,"ENSURE","most_common_name",,14
+888,"PROMOD","most_common_name",,1
+915,"DEXTROSE 5% SSO","majority_rendehr_concept","dextrose_exp",127
+926,"DEXTROSE 50%","majority_rendehr_concept","dextrose_exp",1081
+929,"DEXTROSE","majority_rendehr_concept","dextrose_exp",10
+934,"DEXT 5%-NACL 0.9% 1000 ML LVP","majority_rendehr_concept","nacl_exp",87
+936,"DEXT 5%-NACL 0.45% 1000 ML LVP","majority_rendehr_concept","nacl_exp",113
+940,"1000 ML  -  DEXTROSE-NACL 5-0.45 % IV SOLN","majority_rendehr_concept","dextrose_exp",16
+964,"VITAMIN B COMPLEX/VIT B12","majority_rendehr_concept","thiamine_exp",1
+967,"B COMPLEX","most_common_name",,1
+992,"VITAMIN C","most_common_name",,21
+994,"ASCORBIC ACID","most_common_name",,15
+995,"ERGOCALCIFEROL","most_common_name",,6
+996,"VITAMIN D","most_common_name",,83
+999,"CALCITRIOL","most_common_name",,3
+1040,"PHYTONADIONE","most_common_name",,9
+1049,"VITAMIN B12-FOLIC ACID","most_common_name",,5
+1053,"CYANOCOBALAMIN","most_common_name",,13
+1061,"NEPHROCAPS","most_common_name",,9
+1062,"FOLIC ACID","most_common_name",,210
+1064,"NIASPAN","most_common_name",,5
+1075,"THIAMINE HCL","majority_rendehr_concept","thiamine_exp",94
+1089,"MULTIVITAMINS W-CALCIUM-IRON","most_common_name",,1
+1092,"VITAMIN B COMPLEX","majority_rendehr_concept","thiamine_exp",2
+1095,"MULTIVITAMINS","most_common_name",,2
+1096,"VITAMINS/MINERALS PO TABS","most_common_name",,1
+1097,"VITAMINS/MINERALS PO TABS","most_common_name",,23
+1098,"MULTIVITAMIN","most_common_name",,15
+1099,"MULTIVITAMIN","most_common_name",,36
+1100,"ALLOPURINOL","most_common_name",,85
+1163,"CALCIUM CARBONATE","most_common_name",,46
+1168,"30 ML CUP : ALUM & MAG HYDROXIDE-SIMETH 200-200-20 MG/5ML PO SUSP","most_common_name",,65
+1170,"MAGNESIUM HYDROXIDE","most_common_name",,1
+1186,"CARAFATE","most_common_name",,12
+1224,"SIMETHICONE  80 MG ORAL CHEW TAB","most_common_name",,3
+1235,"LOMOTIL","most_common_name",,13
+1236,"LOPERAMIDE","most_common_name",,7
+1241,"LACTOBACILLUS ACIDOPHILUS","most_common_name",,21
+1289,"SENNA","most_common_name",,73
+1301,"BISACODYL","majority_rendehr_concept","bisacodyl_exp",365
+1319,"MINERAL OIL RECT ENEM","most_common_name",,4
+1324,"DOCUSATE CALCIUM","most_common_name",,4
+1326,"COLACE","most_common_name",,501
+1329,"MILK OF MAGNESIA","most_common_name",,204
+1330,"SODIUM PHOSPHATE","most_common_name",,1
+1346,"FIBERCON","most_common_name",,6
+1370,"URSODIOL","most_common_name",,1
+1396,"LACTULOSE","most_common_name",,76
+1403,"TESTOSTERONE","most_common_name",,2
+1421,"ESTRADIOL","most_common_name",,4
+1424,"PREMARIN","most_common_name",,11
+1453,"LEENA","most_common_name",,2
+1478,"LIDOCAINE HCL 2%","majority_rendehr_concept","lidocaine_exp",61
+1554,"ETOMIDATE","most_common_name",,9
+1592,"RESTORIL","most_common_name",,44
+1594,"HALCION","most_common_name",,2
+1608,"HYDROXYZINE HCL","most_common_name",,5
+1609,"HYDROXYZINE PAMOATE","most_common_name",,1
+1610,"CHLORDIAZEPOXIDE HCL","most_common_name",,1
+1612,"CLORAZEPATE DIPOTASSIUM","most_common_name",,1
+1615,"DIAZEPAM","most_common_name",,106
+1616,"OXAZEPAM","most_common_name",,1
+1617,"XANAX","most_common_name",,194
+1619,"MIDAZOLAM","majority_rendehr_concept","midazolam_exp",376
+1620,"BUSPIRONE HCL","most_common_name",,3
+1621,"CHLORPROMAZINE HCL","most_common_name",,3
+1628,"2 ML  -  PROCHLORPERAZINE EDISYLATE 5 MG/ML IJ SOLN","most_common_name",,53
+1629,"COMPAZINE","most_common_name",,26
+1641,"IMIPRAMINE HCL","most_common_name",,1
+1643,"AMITRIPTYLINE HCL","most_common_name",,13
+1644,"NORTRIPTYLINE HCL","most_common_name",,5
+1650,"DOXEPIN HCL","most_common_name",,1
+1652,"TRAZODONE","most_common_name",,112
+1653,"WELLBUTRIN","most_common_name",,13
+1655,"PROZAC","most_common_name",,11
+1661,"HALOPERIDOL 5 MG/1 ML 1 ML INJ","majority_rendehr_concept","haloperidol_exp",142
+1662,"HALOPERIDOL","majority_rendehr_concept","haloperidol_exp",19
+1664,"LOXAPINE","most_common_name",,1
+1670,"LITHIUM","most_common_name",,2
+1672,"CYPROHEPTADINE HCL","most_common_name",,1
+1682,"RITALIN","most_common_name",,4
+1687,"MEPERIDINE RANGE INJ","most_common_name",,29
+1694,"MORPHINE","majority_rendehr_concept","morphine_exp",1044
+1695,"DILAUDID","majority_rendehr_concept","hydromorphone_exp",345
+1696,"OXYMORPHONE HCL","most_common_name",,1
+1717,"ACETAMINOPHEN-CODEINE","majority_rendehr_concept","acetaminophen_exp",4
+1721,"CODEINE PHOSPHATE","most_common_name",,1
+1730,"NORCO","majority_rendehr_concept","hydrocodone_exp",508
+1731,"HYDROCODONE BITARTRATE","majority_rendehr_concept","hydrocodone_exp",1
+1741,"PERCOCET 5/325 TAB","majority_rendehr_concept","acetaminophen_exp",308
+1742,"OXYCODONE","most_common_name",,223
+1745,"METHADONE HCL","majority_rendehr_concept","methadone_exp",5
+1747,"FENTANYL","majority_rendehr_concept","fentanyl_exp",6
+1794,"ASPIRIN","majority_rendehr_concept","aspirin_exp",19
+1807,"EXCEDRIN EXTRA STRENGTH","majority_rendehr_concept","acetaminophen_exp",2
+1820,"ASPIRIN","majority_rendehr_concept","aspirin_exp",1113
+1848,"ASACOL","most_common_name",,2
+1861,"TYLENOL PM EXTRA STRENGTH","majority_rendehr_concept","acetaminophen_exp",1
+1866,"ACETAMINOPHEN","majority_rendehr_concept","acetaminophen_exp",1770
+1874,"NARCAN","most_common_name",,288
+1875,"NALTREXONE HCL","most_common_name",,1
+1877,"DILANTIN","majority_rendehr_concept","phenytoin_exp",5
+1879,"PHENYTOIN","majority_rendehr_concept","phenytoin_exp",5
+1882,"VALPROATE SODIUM","most_common_name",,5
+1884,"DIVALPROEX SODIUM","most_common_name",,12
+1886,"MYSOLINE","most_common_name",,2
+1894,"CLONAZEPAM","majority_rendehr_concept","clonazepam_exp",54
+1898,"AMANTADINE","most_common_name",,2
+1905,"COGENTIN","most_common_name",,4
+1906,"ORPHENADRINE CITRATE","most_common_name",,1
+1929,"TESSALON PERLE","most_common_name",,3
+1938,"ROBAXIN","most_common_name",,2
+1944,"CARISOPRODOL","most_common_name",,2
+1948,"SUCCINYLCHOLINE","majority_rendehr_concept","succinylcholine_exp",17
+1949,"BACLOFEN","most_common_name",,12
+1950,"FLEXERIL","most_common_name",,29
+1975,"MECLIZINE HCL","most_common_name",,14
+1988,"NEOSTIGMINE METHYLSULFATE","majority_rendehr_concept","neostigmine_exp",26
+2004,"ATROPINE","most_common_name",,68
+2017,"LEVSIN","most_common_name",,3
+2028,"GLYCOPYRROLATE","most_common_name",,57
+2045,"BENTYL","most_common_name",,7
+2048,"DITROPAN XL","most_common_name",,3
+2050,"EPINEPHRINE","majority_rendehr_concept","epinephrine_exp",17
+2051,"<<NOREPINEPHRINE 4 MG/4 ML INJ","majority_rendehr_concept","norepinephrine_exp",104
+2059,"DOPAMINE","majority_rendehr_concept","dopamine_exp",8
+2060,"DOPAMINE HCL","majority_rendehr_concept","dopamine_exp",1
+2073,"ALBUTEROL 2.5 MG/3 ML UD INH SOLN","most_common_name",,455
+2074,"ALBUTEROL","most_common_name",,99
+2084,"EPHEDRINE SULFATE","most_common_name",,46
+2087,"PHENYLEPHRINE","majority_rendehr_concept","phenylephrine_exp",75
+2095,"LABETALOL","most_common_name",,264
+2101,"PROPRANOLOL HCL","most_common_name",,5
+2102,"METOPROLOL TARTRATE","most_common_name",,1026
+2103,"NADOLOL","most_common_name",,2
+2104,"ATENOLOL","most_common_name",,61
+2105,"TIMOPTIC","most_common_name",,1
+2111,"ADIPEX-P","most_common_name",,1
+2148,"REGLAN","majority_rendehr_concept","metoclopramide_exp",281
+2350,"CALMOSEPTINE","most_common_name",,1
+2470,"TL 4.25% BPO MX","most_common_name",,1
+2608,"MENTHOL","most_common_name",,2
+2728,"BUMINATE","most_common_name",,268
+2749,"250 ML PLAS CONT: FAT EMULSION 20 % IV EMUL","most_common_name",,51
+2765,"LECITHIN","most_common_name",,2
+2766,"GEMFIBROZIL","most_common_name",,2
+2769,"FISH OIL","most_common_name",,19
+2793,"LOVASTATIN","most_common_name",,13
+2801,"AMINOCAPROIC ACID","most_common_name",,7
+2803,"ALTEPLASE (CATHFLO ACTIVASE) INJ 2 MG","majority_rendehr_concept","alteplase_exp",44
+2807,"HEPARIN FLUSH","majority_rendehr_concept","heparin_exp",2
+2808,"HEPARIN 25,000 UNIT(S) IN D5W 25","majority_rendehr_concept","heparin_exp",51
+2810,"HEPARIN","majority_rendehr_concept","heparin_exp",561
+2812,"WARFARIN SOD","majority_rendehr_concept","warfarin_exp",501
+2816,"PROTAMINE SULFATE","most_common_name",,1
+2826,"SANDOSTATIN","majority_rendehr_concept","octreotide_exp",1
+2839,"VASOPRESSIN 60 UNITS IN 100 ML NS","majority_rendehr_concept","vasopressin_exp",3
+2849,"LEVOTHYROXINE SODIUM","most_common_name",,239
+2855,"METHIMAZOLE","most_common_name",,5
+2866,"HYDROCORTISONE SOD SUCCINATE","most_common_name",,25
+2867,"HYDROCORTISONE","most_common_name",,1
+2874,"PREDNISOLONE","most_common_name",,3
+2876,"SOLU-MEDROL","majority_rendehr_concept","methylprednisolone_exp",251
+2877,"MEDROL","majority_rendehr_concept","methylprednisolone_exp",19
+2879,"PREDNISONE","most_common_name",,280
+2888,"1 ML VIAL : DEXAMETHASONE SODIUM PHOSPHATE 4 MG/ML IJ SOLN","majority_rendehr_concept","dexamethasone_exp",62
+2889,"DEXAMETHASONE","majority_rendehr_concept","dexamethasone_exp",27
+2891,"KENALOG","most_common_name",,2
+2894,"TRIAMCINOLONE","most_common_name",,2
+2899,"FLUDROCORTISONE ACETATE","most_common_name",,1
+2900,"ALDACTAZIDE","majority_rendehr_concept","spironolactone_exp",2
+2901,"ALDACTONE","majority_rendehr_concept","spironolactone_exp",49
+3327,"TEMOVATE","most_common_name",,2
+3329,"NASONEX","most_common_name",,4
+3347,"SILVADENE","most_common_name",,2
+3385,"MUPIROCIN 2 % TOP OINT","most_common_name",,7
+3417,"AFRIN","most_common_name",,2
+3467,"DIPHENHYDRAMINE","majority_rendehr_concept","diphenhydramine_exp",1
+3641,"DIAMOX SEQUELS","most_common_name",,2
+3647,"TRIAMTERENE-HCTZ","majority_rendehr_concept","triamterene_exp",10
+3649,"HYDROCHLOROTHIAZIDE","most_common_name",,114
+3660,"LASIX","majority_rendehr_concept","furosemide_exp",1637
+3662,"CHLORTHALIDONE","most_common_name",,4
+3663,"METOLAZONE","most_common_name",,8
+3664,"BUMETANIDE","majority_rendehr_concept","bumetanide_exp",93
+3665,"INDAPAMIDE","most_common_name",,1
+3666,"TRIAMTERENE","majority_rendehr_concept","triamterene_exp",4
+3667,"AMILORIDE HCL","most_common_name",,2
+3672,"ISOSORBIDE","most_common_name",,15
+3675,"PROBENECID","most_common_name",,4
+3687,"K PHOS MONO-SOD PHOS DI & MONO 155-852-130 MG PO TABS","most_common_name",,19
+3717,"COLCHICINE","most_common_name",,18
+3718,"INDOMETHACIN","most_common_name",,1
+3719,"INDOCIN","most_common_name",,3
+3723,"IBUPROFEN","most_common_name",,59
+3726,"ALEVE","most_common_name",,3
+3727,"NAPROXEN","most_common_name",,6
+3733,"DICLOFENAC SODIUM","most_common_name",,9
+3736,"KETOPROFEN","most_common_name",,2
+3747,"ARNICA","most_common_name",,2
+3792,"POLYETHYLENE GLYCOL","most_common_name",,18
+3794,"SODIUM CHLORIDE BACTERIOSTATIC 0.9 % INJ SOLN","majority_rendehr_concept","nacl_exp",13
+3808,"PROPYLENE GLYCOL","most_common_name",,2
+3856,"CINNAMON OIL","most_common_name",,7
+3872,"GARLIC","most_common_name",,1
+3902,"CISPLATIN","most_common_name",,1
+3905,"RHEUMATREX","most_common_name",,1
+3906,"METHOTREXATE","most_common_name",,4
+3923,"MEGACE","most_common_name",,18
+3926,"TAMOXIFEN CITRATE","most_common_name",,3
+3952,"AMPICILLIN SODIUM","majority_rendehr_concept","ampicillin_exp",1
+3962,"AUGMENTIN","majority_rendehr_concept","amoxicillin_exp",9
+3963,"AMOXICILLIN","majority_rendehr_concept","amoxicillin_exp",2
+3976,"CEFAZOLIN","majority_rendehr_concept","cefazolin_exp",88
+3996,"CEFTRIAXONE","majority_rendehr_concept","ceftriaxone_exp",215
+4010,"DEMECLOCYCLINE HCL","most_common_name",,1
+4012,"DOXYCYCLINE CALCIUM","most_common_name",,4
+4014,"VIBRAMYCIN","most_common_name",,1
+4040,"RIFAMPIN","most_common_name",,1
+4042,"VANCOMYCIN HCL 1000 MG IV SOLR","majority_rendehr_concept","vancomycin_exp",473
+4044,"CLINDAMYCIN","majority_rendehr_concept","clindamycin_exp",2
+4047,"BACITRACIN","most_common_name",,18
+4054,"PRIMAXIN","most_common_name",,1
+4071,"BACTRIM","majority_rendehr_concept","sulfamethoxazole_exp",8
+4074,"AZULFIDINE","most_common_name",,1
+4080,"ISONIAZID","most_common_name",,1
+4084,"PYRAZINAMIDE","most_common_name",,1
+4085,"ETHAMBUTOL HCL","most_common_name",,1
+4087,"NITROFURANTOIN","most_common_name",,1
+4108,"PHENAZOPYRIDINE HCL","most_common_name",,1
+4117,"TRIMETHOPRIM","most_common_name",,1
+4124,"CIPRO","majority_rendehr_concept","ciprofloxacin_exp",1
+4129,"NYSTATIN","most_common_name",,17
+4132,"KETOCONAZOLE","most_common_name",,3
+4137,"QUETIAPINE","most_common_name",,1
+4139,"MICONAZOLE","most_common_name",,2
+4151,"HYDROXYCHLOROQUINE SULFATE","most_common_name",,7
+4157,"FLAGYL","majority_rendehr_concept","metronidazole_exp",31
+4177,"ACZONE","most_common_name",,3
+4183,"ACYCLOVIR","majority_rendehr_concept","acyclovir_exp",5
+4212,"PNEUMOCOCCAL POLYSACCHARIDES","most_common_name",,100
+4285,"SODIUM CHLORIDE","majority_rendehr_concept","nacl_exp",2
+4297,"CHLORHEXIDINE (PERIOGARD) 0.12 % ORAL RINSE 15 ML","most_common_name",,98
+4480,"BENADRYL","majority_rendehr_concept","diphenhydramine_exp",441
+4505,"CHLORPHENIRAMINE MALEATE","most_common_name",,1
+4518,"TAGAMET HB","most_common_name",,3
+4519,"ZANTAC","majority_rendehr_concept","ranitidine_exp",3
+4520,"RANITIDINE HCL","majority_rendehr_concept","ranitidine_exp",21
+4521,"PEPCID","most_common_name",,400
+4553,"EPOETIN ALFA","most_common_name",,7
+4603,"DRAMAMINE","most_common_name",,1
+4673,"OMEPRAZOLE","most_common_name",,186
+4703,"OPTIRAY 320","most_common_name",,18
+4704,"CLINDAMYCIN","majority_rendehr_concept","clindamycin_exp",1
+4710,"TRIMETHOPRIM-POLYMYXIN B SULF","most_common_name",,1
+4763,"METFORMIN HCL","most_common_name",,151
+4766,"VITAMIN A","most_common_name",,1
+4791,"SOTALOL","most_common_name",,5
+4834,"CLOZARIL","most_common_name",,1
+4842,"PROPOFOL","majority_rendehr_concept","propofol_exp",371
+4846,"LORAZEPAM","majority_rendehr_concept","lorazepam_exp",1091
+4851,"FAMOTIDINE","most_common_name",,6
+4855,"ATROPINE","most_common_name",,1
+4868,"FLUCONAZOLE","majority_rendehr_concept","fluconazole_exp",4
+4884,"CALCIUM ACETATE","most_common_name",,11
+5175,"TORADOL","majority_rendehr_concept","ketorolac_exp",104
+5198,"PILOCARPINE HCL","most_common_name",,2
+5223,"BENEFIBER","most_common_name",,2
+5225,"POLYVINYL ALCOHOL","most_common_name",,1
+5859,"CALCIUM + D","most_common_name",,22
+5888,"NITROGLYCERIN 50MG/D5W 250ML BTL","majority_rendehr_concept","nitroglycerin_exp",49
+5959,"CENTRUM","most_common_name",,4
+6031,"CARDURA","most_common_name",,13
+6055,"ZOFRAN","most_common_name",,342
+6071,"CIPROFLOXACIN IN D5W 400 MG/200ML IV SOLN","majority_rendehr_concept","ciprofloxacin_exp",7
+6080,"RAMIPRIL","most_common_name",,8
+6089,"ETODOLAC","most_common_name",,1
+6113,"LOTENSIN","most_common_name",,11
+6205,"FELODIPINE","majority_rendehr_concept","felodipine_exp",1
+6215,"NOVOLIN 70-30","most_common_name",,3
+6227,"PRAVASTATIN SODIUM","most_common_name",,49
+6249,"NICODERM CQ","most_common_name",,38
+6306,"MAGNESIUM SULFATE 1 G IN D5W 100ML **LOCKED DOSE","majority_rendehr_concept","magnesium_sulfate_exp",278
+6311,"NABUMETONE","most_common_name",,1
+6312,"SIMVASTATIN","majority_rendehr_concept","simvastatin_exp",184
+6319,"FLUMAZENIL","majority_rendehr_concept","flumazenil_exp",14
+6322,"MACROBID","most_common_name",,4
+6323,"METOPROLOL SUCCINATE","most_common_name",,187
+6324,"ZOLOFT","most_common_name",,63
+6334,"AZITHROMYCIN","majority_rendehr_concept","azithromycin_exp",81
+6341,"IMDUR","most_common_name",,39
+6421,"FINASTERIDE","most_common_name",,18
+6438,"FENTANYL","majority_rendehr_concept","fentanyl_exp",55
+6446,"CARBOXYMETHYLCELLULOSE","most_common_name",,1
+6494,"NORVASC","majority_rendehr_concept","amlodipine_exp",375
+6495,"CEFPODOXIME PROXETIL","most_common_name",,1
+6520,"UBIDECARENONE","most_common_name",,1
+6544,"ZYRTEC","most_common_name",,24
+6545,"PULMICORT RESPULE","most_common_name",,29
+6552,"FENOFIBRATE","most_common_name",,14
+7344,"PAXIL","most_common_name",,9
+7378,"LAMICTAL","most_common_name",,24
+7393,"SALMETEROL XINAFOATE","most_common_name",,5
+7396,"BISOPROLOL FUMARATE","most_common_name",,4
+7590,"LAMISIL","most_common_name",,1
+7605,"LORATADINE","most_common_name",,53
+7631,"ACCUPRIL","most_common_name",,1
+7837,"LIDOPATCH","majority_rendehr_concept","lidocaine_exp",2
+7842,"AMBIEN","most_common_name",,243
+7844,"POTASSIUM CHLORIDE","majority_rendehr_concept","kcl_exp",6
+7873,"FLONASE","most_common_name",,24
+7878,"LOVENOX","most_common_name",,546
+8060,"ZENPEP","most_common_name",,1
+8254,"SODIUM CHLORIDE 0.45% 1000 ML LVP","majority_rendehr_concept","nacl_exp",35
+8255,"1000 ML FLEX CONT : SODIUM CHLORIDE 0.9 % IV SOLN","majority_rendehr_concept","nacl_exp",4317
+8257,"SODIUM CHLORIDE","majority_rendehr_concept","nacl_exp",1
+8259,"FLAGYL","majority_rendehr_concept","metronidazole_exp",53
+8317,"TRAMADOL HCL","majority_rendehr_concept","tramadol_exp",139
+8466,"VANCOMYCIN IN D5W (VANCOCIN) IVPB 1 G","majority_rendehr_concept","vancomycin_exp",69
+8643,"HEPARIN (PORCINE) IN NACL 100-0.45 UNIT/ML-% IJ SOLN","majority_rendehr_concept","heparin_exp",8
+8721,"RISPERDAL","most_common_name",,8
+8738,"PIPERACILLIN-TAZOBACTAM","majority_rendehr_concept","piperacillin_exp",208
+8824,"DICLOFENAC POTASSIUM","most_common_name",,1
+8829,"TORSEMIDE","most_common_name",,8
+8831,"GABAPENTIN","most_common_name",,244
+8847,"EFFEXOR XR","most_common_name",,10
+8946,"LESCOL XL","most_common_name",,1
+8963,"ROCURONIUM BROMIDE","majority_rendehr_concept","rocuronium_exp",50
+8974,"TACROLIMUS 1 MG PO CAPS","most_common_name",,17
+8991,"MAVIK","most_common_name",,3
+8993,"PREVACID","majority_rendehr_concept","lansoprazole_exp",21
+9040,"DUONEB","most_common_name",,636
+9061,"CLOBETASOL EMOLLIENT","most_common_name",,1
+9690,"GLUCOVANCE","most_common_name",,3
+9759,"BENADRYL","majority_rendehr_concept","diphenhydramine_exp",6
+9829,"LOSARTAN POTASSIUM","most_common_name",,120
+9863,"HYZAAR","most_common_name",,2
+9896,"TRUSOPT","most_common_name",,4
+10009,"TIMOLOL","most_common_name",,2
+10012,"CELLCEPT","most_common_name",,5
+10041,"LOTREL","majority_rendehr_concept","amlodipine_exp",2
+10093,"VANCOMYCIN 1 GM IN NS 250 ML IVPB","majority_rendehr_concept","vancomycin_exp",82
+10117,"VALTREX","most_common_name",,6
+10124,"ALENDRONATE SODIUM","most_common_name",,20
+10132,"CEFEPIME","majority_rendehr_concept","cefepime_exp",61
+10143,"CASODEX","most_common_name",,3
+10249,"ARIMIDEX","most_common_name",,1
+10278,"CISATRACURIUM","majority_rendehr_concept","cisatracurium_exp",13
+10321,"CELEXA","most_common_name",,109
+10329,"VERSED","majority_rendehr_concept","midazolam_exp",27
+10485,"GLIMEPIRIDE","most_common_name",,22
+10705,"LIDOCAINE 5 % TOP PTMD","majority_rendehr_concept","lidocaine_exp",12
+10731,"CAMPRAL","most_common_name",,2
+10747,"FORADIL","most_common_name",,1
+11060,"TOPAMAX","most_common_name",,4
+11115,"PRILOSEC","most_common_name",,5
+11249,"MAGNESIUM SULFATE 2 G IN NS PREMIX","majority_rendehr_concept","magnesium_sulfate_exp",73
+11254,"MEROPENEM","majority_rendehr_concept","meropenem_exp",59
+11265,"MORPHINE","majority_rendehr_concept","morphine_exp",1
+11505,"MIRTAZAPINE","majority_rendehr_concept","mirtazapine_exp",21
+11528,"INSULIN-LISPRO (RDNA) *UNIT* INJ","majority_rendehr_concept","insulin_exp",357
+11560,"XALATAN","most_common_name",,5
+11582,"ZANAFLEX","most_common_name",,6
+11595,"ALLEGRA","most_common_name",,5
+11632,"TOREMIFENE CITRATE","most_common_name",,1
+11735,"TRILEPTAL","most_common_name",,1
+11786,"ALPHAGAN P","most_common_name",,1
+11792,"ASPIRIN","majority_rendehr_concept","aspirin_exp",5
+11814,"OLANZAPINE","most_common_name",,30
+12014,"PROMETHAZINE HCL","most_common_name",,131
+12181,"MELOXICAM","most_common_name",,22
+12182,"REQUIP","most_common_name",,6
+12204,"DIOVAN","most_common_name",,19
+12259,"ARICEPT","most_common_name",,16
+12306,"TRANSDERM-SCOP","most_common_name",,9
+12351,"FEMARA","most_common_name",,3
+12383,"LEVAQUIN","majority_rendehr_concept","levofloxacin_exp",225
+12384,"LEVAQUIN","majority_rendehr_concept","levofloxacin_exp",66
+12404,"LIPITOR","majority_rendehr_concept","atorvastatin_exp",427
+12474,"AGGRENOX","majority_rendehr_concept","aspirin_exp",7
+12810,"COPAXONE","most_common_name",,1
+13209,"KAYEXALATE","most_common_name",,28
+13446,"CIPRO","majority_rendehr_concept","ciprofloxacin_exp",11
+13449,"ADDERALL","most_common_name",,3
+13455,"MIRAPEX","most_common_name",,8
+13573,"CALCIUM","most_common_name",,1
+13748,"LIDOCAINE HCL 1%","majority_rendehr_concept","lidocaine_exp",4
+13778,"NAMENDA","most_common_name",,11
+13795,"COREG","majority_rendehr_concept","carvedilol_exp",307
+13819,"PERPHENAZINE-AMITRIPTYLINE","most_common_name",,2
+13864,"FLOMAX","most_common_name",,147
+13894,"SINEMET 25-100","most_common_name",,1
+13908,"KEFLEX","most_common_name",,4
+13956,"CHONDROITIN SULFATE","most_common_name",,1
+14014,"COMBIVIR","most_common_name",,1
+14015,"SEROQUEL","most_common_name",,45
+14772,"POTASSIUM CHLORIDE IN NACL 40 MEQ IN 250 ML (PREMIX)","majority_rendehr_concept","kcl_exp",20
+14778,"DEXT 5%-NACL 0.45%-KCL 20MEQ LVP","majority_rendehr_concept","kcl_exp",59
+14944,"PARENTERAL NUTRITION","most_common_name",,8
+15576,"IRBESARTAN","most_common_name",,1
+15908,"MIDODRINE HCL 5 MG PO TABS","most_common_name",,21
+16740,"BYSTOLIC","most_common_name",,4
+16911,"SINGULAIR","most_common_name",,49
+16917,"EVISTA","most_common_name",,2
+17084,"DIOVAN HCT","most_common_name",,1
+17165,"FOLBIC","most_common_name",,2
+17291,"IBANDRONATE SODIUM","most_common_name",,1
+17433,"PLETAL","most_common_name",,9
+17539,"PLAVIX","most_common_name",,259
+17791,"POTASSIUM PHOSPHATE","majority_rendehr_concept","potassium_phosphate_exp",9
+17793,"AMIODARONE 450 MG/250 ML D5W INFUSION (STD CON'C) (REPACKAGE)","majority_rendehr_concept","amiodarone_exp",7
+17876,"FLORASTOR","most_common_name",,1
+18250,"ZEMPLAR","most_common_name",,5
+18377,"PRENATAL","most_common_name",,5
+18385,"CAPECITABINE","most_common_name",,2
+18535,"RIZATRIPTAN","most_common_name",,2
+18569,"BALSALAZIDE DISODIUM","most_common_name",,1
+18678,"ZINC","most_common_name",,1
+18830,"ENBREL","most_common_name",,4
+18832,"RENAGEL","most_common_name",,3
+18839,"MICARDIS","most_common_name",,4
+18979,"CELECOXIB","most_common_name",,13
+19058,"ZOFRAN ODT","most_common_name",,116
+19063,"B-12","most_common_name",,1
+19078,"GLUCAGEN","most_common_name",,488
+19858,"XOPENEX","most_common_name",,10
+19949,"HUMALOG MIX 75-25","most_common_name",,5
+19963,"ADVAIR DISKUS","most_common_name",,96
+20292,"FERROUS SULFATE","most_common_name",,30
+20324,"PIOGLITAZONE HCL","most_common_name",,4
+20334,"INSULIN ADMIN. SUPPLIES","majority_rendehr_concept","insulin_exp",3
+20347,"SONATA","most_common_name",,1
+20401,"XIFAXAN","most_common_name",,4
+20420,"DICLOFENAC EPOLAMINE","most_common_name",,2
+20607,"TAMIFLU","most_common_name",,2
+20690,"AVELOX","most_common_name",,1
+20769,"NOVOLOG","majority_rendehr_concept","insulin_exp",754
+20776,"COENZYME Q-10","most_common_name",,2
+20952,"LEVETIRACETAM","majority_rendehr_concept","levetiracetam_exp",131
+20968,"MELATONIN","most_common_name",,1
+20971,"DEXMEDETOMIDINE 200 MCG IN 50 ML NS","majority_rendehr_concept","dexmedetomidine_exp",46
+20974,"TACROLIMUS 1 MG PO CAPS","most_common_name",,10
+21088,"CALCIUM CITRATE + D","most_common_name",,1
+21102,"LEUPROLIDE ACETATE","most_common_name",,1
+21217,"SAW PALMETTO","most_common_name",,2
+21229,"MILNACIPRAN HCL","most_common_name",,1
+21452,"WELCHOL","most_common_name",,1
+21516,"QUININE HCL","most_common_name",,1
+21565,"CENTRUM SILVER","most_common_name",,18
+21607,"NEXIUM","most_common_name",,17
+21772,"SENNOSIDES-DOCUSATE SODIUM 8.6-50 MG PO TABS","most_common_name",,188
+21859,"NATEGLINIDE","most_common_name",,2
+21873,"TELMISARTAN/HYDROCHLOROTHIAZIDE","most_common_name",,1
+21993,"SYMBICORT","most_common_name",,33
+22008,"PROTONIX","most_common_name",,1163
+22025,"INSULIN-GLARGINE *UNIT* INJ","majority_rendehr_concept","insulin_exp",355
+22026,"OCELLA","most_common_name",,21
+22033,"VALCYTE","most_common_name",,4
+22038,"LIDOCAINE-TRANSPARENT DRESSING 4 % EXTERNAL KIT","majority_rendehr_concept","lidocaine_exp",14
+22708,"HYDROMORPHONE","majority_rendehr_concept","hydromorphone_exp",2
+22724,"FENTANYL 1000 MCG IN 100 ML NS","majority_rendehr_concept","fentanyl_exp",32
+22819,"POLYETHYLENE GLYCOL 3350 PO PACK","most_common_name",,239
+22820,"POLYETHYLENE GLYCOL","most_common_name",,1
+22868,"DEFINITY","most_common_name",,7
+22881,"L-LYSINE","most_common_name",,1
+22890,"ARANESP","most_common_name",,3
+22961,"CALCIUM","most_common_name",,22
+23038,"INSULIN SYRINGE","majority_rendehr_concept","insulin_exp",2
+23233,"ARIXTRA","most_common_name",,1
+23400,"INSULIN ASPART PROTAMINE HUMAN/INSULIN ASPART","majority_rendehr_concept","insulin_exp",1
+23490,"BENICAR","most_common_name",,8
+23659,"GLUCOSAMINE","most_common_name",,9
+24022,"LEXAPRO","most_common_name",,20
+24024,"SPIRIVA","most_common_name",,106
+24316,"INSPRA","most_common_name",,1
+24425,"MAGNESIUM","most_common_name",,12
+24459,"ZETIA","most_common_name",,8
+24485,"AVODART","most_common_name",,7
+24523,"MIDAZOLAM 100 MG IN 100 ML NS","majority_rendehr_concept","midazolam_exp",11
+24551,"ABILIFY","most_common_name",,4
+24700,"FORTEO","most_common_name",,1
+24819,"METHOTREXATE","most_common_name",,3
+24846,"SUBOXONE","most_common_name",,2
+25009,"CRESTOR","most_common_name",,41
+25035,"LEVITRA","most_common_name",,2
+25040,"ANCEF","most_common_name",,21
+25056,"OXYBUTYNIN","most_common_name",,10
+25058,"APREPITANT","most_common_name",,1
+25201,"MYFORTIC","most_common_name",,1
+25277,"MORPHINE 5 MG/ML INJECTION : 1 ML VIAL","majority_rendehr_concept","morphine_exp",34
+25281,"1000 ML  -  POTASSIUM CHLORIDE IN NACL 20-0.9 MEQ/L-% IV SOLN","majority_rendehr_concept","kcl_exp",10
+25386,"FENTANYL","majority_rendehr_concept","fentanyl_exp",863
+25804,"COMBIGAN","most_common_name",,1
+25869,"NIACIN","most_common_name",,5
+25968,"ESOMEPRAZOLE INJ","most_common_name",,22
+25998,"SENSIPAR","most_common_name",,3
+26407,"INSULIN DETEMIR","majority_rendehr_concept","insulin_exp",85
+26470,"LYRICA","most_common_name",,28
+26475,"CINNAMON","most_common_name",,1
+26521,"CYMBALTA","most_common_name",,29
+26595,"SOLIFENACIN SUCCINATE","most_common_name",,2
+26696,"10 ML VIAL: INFUVITE IV INJ","most_common_name",,16
+26714,"CENTRUM SILVER","most_common_name",,10
+26791,"ESZOPICLONE","most_common_name",,2
+26793,"LOVAZA","most_common_name",,3
+26808,"CEFAZOLIN 2 GM IN NS 100 ML IVPB (REPACKAGE)","majority_rendehr_concept","cefazolin_exp",29
+32690,"SENNA","most_common_name",,5
+32716,"GLUCOSAMINE","most_common_name",,1
+32900,"ZOSYN","majority_rendehr_concept","piperacillin_exp",51
+33094,"CEFTRIAXONE","majority_rendehr_concept","ceftriaxone_exp",7
+33152,"APIDRA","most_common_name",,1
+33189,"CENTRUM SILVER","most_common_name",,3
+33191,"FLUOXETINE","most_common_name",,6
+33229,"CALCIUM","most_common_name",,14
+33243,"MEPERIDINE HCL","most_common_name",,19
+33301,"VITAMIN E","most_common_name",,3
+33309,"THERA M PLUS","most_common_name",,1
+33314,"HEPARIN INJ 5,000 UNITS","majority_rendehr_concept","heparin_exp",71
+33347,"OMEGA 3","most_common_name",,23
+33356,"NEOSPORIN","most_common_name",,2
+33384,"PRESERVISION LUTEIN","most_common_name",,1
+33442,"HEPARIN SOD (PORCINE)","majority_rendehr_concept","heparin_exp",17
+33446,"RANEXA","most_common_name",,8
+33451,"AMITIZA","most_common_name",,5
+33592,"LIDOCAINE","majority_rendehr_concept","lidocaine_exp",72
+33598,"ONDANSETRON","most_common_name",,1315
+33857,"OCUVITE","most_common_name",,1
+33888,"ATRIPLA","most_common_name",,2
+33904,"TRICOR","most_common_name",,19
+33930,"ELAPRASE","most_common_name",,1
+34026,"MOVIPREP","most_common_name",,1
+34106,"K PHOS MONO-SOD PHOS DI & MONO 155-852-130 MG PO TABS","most_common_name",,8
+34126,"JANUVIA","most_common_name",,24
+34245,"CARVEDILOL","majority_rendehr_concept","carvedilol_exp",1
+34343,"INVEGA","most_common_name",,4
+34433,"EXFORGE","majority_rendehr_concept","amlodipine_exp",2
+34493,"TEKTURNA","most_common_name",,1
+34632,"SPIRONOLACTONE","majority_rendehr_concept","spironolactone_exp",22
+34638,"PRESERVISION AREDS","most_common_name",,2
+34665,"JANUMET XR","most_common_name",,3
+34674,"VITAMIN E","most_common_name",,2
+34677,"MEGESTROL ACETATE","most_common_name",,2
+34713,"TRAVOPROST (BENZALKONIUM)","most_common_name",,1
+34756,"FLUTICASONE FUROATE","most_common_name",,2
+34805,"HYDROMORPHONE HCL","majority_rendehr_concept","hydromorphone_exp",210
+34849,"LETAIRIS","most_common_name",,2
+34884,"RIVASTIGMINE","most_common_name",,2
+34908,"MIDAZOLAM","majority_rendehr_concept","midazolam_exp",86
+35085,"PEPCID","most_common_name",,220
+35107,"FAMOTIDINE","most_common_name",,7
+35262,"SEVELAMER CARBONATE","most_common_name",,9
+35282,"20 ML SYRINGE : CEFAZOLIN 2 G IN STERILE WATER 20 ML SYRINGE IV","majority_rendehr_concept","cefazolin_exp",3
+35344,"MULTIVITAMINS","most_common_name",,7
+35420,"PRISTIQ ER","most_common_name",,5
+35516,"EPHEDRINE","most_common_name",,5
+35517,"PHENYLEPHRINE","majority_rendehr_concept","phenylephrine_exp",4
+35587,"PHENYLEPHRINE","majority_rendehr_concept","phenylephrine_exp",24
+35602,"OCUVITE","most_common_name",,5
+35604,"PRADAXA","most_common_name",,17
+35606,"TOVIAZ","most_common_name",,2
+35645,"PRO-RED AC","most_common_name",,1
+35675,"MESALAMINE","most_common_name",,2
+35696,"VIT C/CHERRY EXT/CELERY SEED EXT/CELERY SEED/GRAPE SEED EXT","most_common_name",,1
+35779,"NICARDIPINE 40 MG IN 200 ML NS RTU-","majority_rendehr_concept","nicardipine_exp",10
+35848,"CEFEPIME","majority_rendehr_concept","cefepime_exp",1
+35897,"BIOTIN","most_common_name",,1
+35915,"XARELTO","most_common_name",,17
+36085,"DEXILANT","most_common_name",,6
+36086,"ATROPINE","most_common_name",,1
+36106,"ULORIC","most_common_name",,2
+36156,"BUPROPION HBR","most_common_name",,9
+36158,"FEOSOL","most_common_name",,6
+36159,"PRASUGREL HCL","most_common_name",,9
+36211,"CHOLECALCIFEROL (VIT D3)/SOY ISOFLAVONE","most_common_name",,4
+36225,"CALCIUM CARB&CITRATE/VITAMIN D3/MINERAL COMB NO.34/GENISTEIN","most_common_name",,2
+36346,"NOREPINEPHRINE 8 MG IN 250ML NS","majority_rendehr_concept","norepinephrine_exp",75
+36398,"FISH OIL + VITAMIN D-3","most_common_name",,1
+36432,"VITAMIN B COMPLEX#11/FOLIC ACID/ASCORBIC ACID/BIOTIN/ZN OXID","majority_rendehr_concept","thiamine_exp",1
+36436,"VICTOZA 2-PAK","most_common_name",,2
+36437,"EPINEPHRINE 8 MG IN 250 ML NS","majority_rendehr_concept","epinephrine_exp",15
+36444,"MULTAQ","most_common_name",,1
+36446,"NEPHRONEX","most_common_name",,3
+36471,"SAXAGLIPTIN HCL","most_common_name",,1
+36541,"TYVASO","majority_rendehr_concept","treprostinil_exp",2
+36550,"CLONIDINE","majority_rendehr_concept","clonidine_exp",62
+36576,"SAPHRIS","most_common_name",,1
+36661,"KRILL OIL/OMEGA-3/DHA/EPA/OMEGA-6/PHOSPHOLIPIDS/ASTAXANTHIN","most_common_name",,1
+36694,"CHLORPHENIRAMINE MALEATE/PHENYLEPHRINE BITARTRATE/ASPIRIN","majority_rendehr_concept","aspirin_exp",1
+36749,"BACID","most_common_name",,1
+36808,"METHYLPREDNISOLONE SODIUM SUCC 125 MG IJ SOLR","majority_rendehr_concept","methylprednisolone_exp",101
+36843,"METANX","most_common_name",,1
+36875,"HYDROCORTISONE SOD SUCCINATE 100 MG IJ SOLR","most_common_name",,11
+36921,"VITAMIN C","most_common_name",,3
+36984,"JALYN","most_common_name",,1
+37021,"CEFEPIME","majority_rendehr_concept","cefepime_exp",1
+37050,"DULERA","most_common_name",,6
+37109,"CALCIUM GLUCONATE 2 G/50 ML NS","most_common_name",,5
+37111,"BACILLUS COAGULANS/INULIN","most_common_name",,1
+37123,"DALIRESP","most_common_name",,2
+37127,"OMEGA 3-6-9 FATTY ACIDS","most_common_name",,2
+37189,"PROBIOTIC & ACIDOPHILUS","most_common_name",,1
+37207,"MULTIVITAMIN","most_common_name",,45
+37310,"MULTIVIT W-CA, MIN/IRON CHELATE/FA/LUTEIN/HERBAL #179","most_common_name",,2
+37328,"TICAGRELOR 90 MG PO TABS","most_common_name",,25
+37346,"THERAGRAN-M PREMIER 50 PLUS","most_common_name",,5
+37356,"POTASSIUM AND SODIUM PHOSPHATE","most_common_name",,1
+37442,"VANCOMYCIN 1 G MINI-BAG PLUS (VIAL MATE)","majority_rendehr_concept","vancomycin_exp",30
+37458,"BUFFERED LIDOCAINE 1%","majority_rendehr_concept","lidocaine_exp",8
+37546,"ECHINACEA","most_common_name",,1
+37571,"ZYTIGA","most_common_name",,1
+37576,"TRADJENTA","most_common_name",,3
+37597,"VIIBRYD","most_common_name",,3
+37669,"GLUCOSAMINE & CHONDROITIN","most_common_name",,2
+37677,"CRANBERRY","most_common_name",,1
+37678,"AMIODARONE BOLUS","majority_rendehr_concept","amiodarone_exp",19
+37739,"CAL MAG ZINC + D","most_common_name",,1
+37792,"ELIQUIS","most_common_name",,25
+38205,"PRENATAL","most_common_name",,1
+38209,"AFLIBERCEPT","most_common_name",,2
+38328,"CHLORPHENIRAMINE MAL/PHENYLEPHRINE/D-METHORPHAN HB/ASPIRIN","majority_rendehr_concept","aspirin_exp",1
+38373,"LEVETIRACETAM","majority_rendehr_concept","levetiracetam_exp",9
+38448,"MVI, ADULT NO.4 WITH VIT K 3300 UNIT-150 MCG/10 ML IV 10 ML VIAL","most_common_name",,65
+38613,"LACTOBACILLUS ACIDOPH/BIFIDOBACT ANIM/GLOBULIN PROTEIN CONC","most_common_name",,1
+38771,"BIOFLAVONOID CITRUS","most_common_name",,1
+39215,"KRILL OIL","most_common_name",,1
+39314,"HYDROCODONE-HOMATROPINE MBR","majority_rendehr_concept","hydrocodone_exp",1
+39357,"MYRBETRIQ","most_common_name",,1
+39528,"TUDORZA PRESSAIR","most_common_name",,1
+39583,"LINACLOTIDE","most_common_name",,2
+39623,"CRANBERRY","most_common_name",,1
+39968,"NESINA","most_common_name",,3
+40230,"PRMX DEXMEDETOMIDINE 400MCG/100ML NS DRIP","majority_rendehr_concept","dexmedetomidine_exp",26
+40567,"0.5 ML - INFLUENZA VAC SPLIT QUAD 0.5 ML IM SUSP","most_common_name",,11
+40852,"UMECLIDINIUM BROMIDE/VILANTEROL TRIFENATATE","most_common_name",,1
+41600,"CHOLECALCIFEROL (VIT D3)/FOLIC ACID","most_common_name",,3

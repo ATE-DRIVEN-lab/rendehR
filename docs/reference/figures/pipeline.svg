@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 170" width="960" height="170" role="img" aria-labelledby="t d">
+  <title id="t">rendehR pipeline</title>
+  <desc id="d">Five stages: download raw data, define and import the cohort, load and extract concepts, harmonize and merge sources, analyse.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#7a8794"/>
+    </marker>
+    <style>
+      .box { fill: #eef3f8; stroke: #2f5577; stroke-width: 1.5; }
+      .hd  { font: 600 15px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fill: #2f5577; }
+      .tx  { font: 12px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; fill: #333c45; }
+      .fn  { font: 11.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #5a6672; }
+      .ar  { stroke: #7a8794; stroke-width: 1.6; fill: none; }
+    </style>
+  </defs>
+  <g>
+    <rect class="box" x="6"   y="10" width="168" height="150" rx="10"/>
+    <text class="hd" x="20" y="38">1 Download</text>
+    <text class="tx" x="20" y="62">PhysioNet tables</text>
+    <text class="tx" x="20" y="79">to Parquet</text>
+    <text class="fn" x="20" y="132">download_source()</text>
+
+    <rect class="box" x="202" y="10" width="168" height="150" rx="10"/>
+    <text class="hd" x="216" y="38">2 Cohort</text>
+    <text class="tx" x="216" y="62">select stays (ICD, SQL,</text>
+    <text class="tx" x="216" y="79">IDs), stream only their</text>
+    <text class="tx" x="216" y="96">rows into the database</text>
+    <text class="fn" x="216" y="132">import_cohort_general()</text>
+
+    <rect class="box" x="398" y="10" width="168" height="150" rx="10"/>
+    <text class="hd" x="412" y="38">3 Concepts</text>
+    <text class="tx" x="412" y="62">windows, raw fixes,</text>
+    <text class="tx" x="412" y="79">131 time-series and</text>
+    <text class="tx" x="412" y="96">exposure concepts</text>
+    <text class="fn" x="412" y="132">run_one_source()</text>
+
+    <rect class="box" x="594" y="10" width="168" height="150" rx="10"/>
+    <text class="hd" x="608" y="38">4 Harmonize</text>
+    <text class="tx" x="608" y="62">flat, ts and dur tables</text>
+    <text class="tx" x="608" y="79">per source, merged</text>
+    <text class="tx" x="608" y="96">into one schema</text>
+    <text class="fn" x="608" y="132">merge_sources()</text>
+
+    <rect class="box" x="790" y="10" width="164" height="150" rx="10"/>
+    <text class="hd" x="804" y="38">5 Analyse</text>
+    <text class="tx" x="804" y="62">tidy loaders, wide</text>
+    <text class="tx" x="804" y="79">tables, Shiny explorer</text>
+    <text class="fn" x="804" y="132">load_merged_ts()</text>
+    <text class="fn" x="804" y="149">run_explorer()</text>
+
+    <path class="ar" d="M176,85 L198,85" marker-end="url(#a)"/>
+    <path class="ar" d="M372,85 L394,85" marker-end="url(#a)"/>
+    <path class="ar" d="M568,85 L590,85" marker-end="url(#a)"/>
+    <path class="ar" d="M764,85 L786,85" marker-end="url(#a)"/>
+  </g>
+</svg>

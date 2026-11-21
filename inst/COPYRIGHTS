@@ -1,0 +1,76 @@
+rendehR is licensed under the GNU General Public License, version 3 (GPL-3);
+see LICENSE.md. Part of its concept layer is modelled on the concept
+definitions of ricu (https://github.com/eth-mds/ricu, GPL-3).
+
+It includes material from the following projects, used under the MIT License,
+whose copyright and permission notices are reproduced below.
+
+1. MIT-LCP MIMIC-Code (https://github.com/MIT-LCP/mimic-code)
+   SQL under inst/sql/mimic_iii/concepts_sqls/mimic_code and
+   inst/sql/mimic_iv/concepts_sqls/mimic_code; the concept SQL adapted from it
+   under inst/sql/mimic_iii/concepts_sqls/ehr and
+   inst/sql/mimic_iv/concepts_sqls/ehr; the MIMIC-IV Sepsis-3 and
+   suspicion-of-infection cohort SQL under inst/sql/mimic_iv/cohorts/sepsis3 and
+   inst/sql/mimic_iv/cohorts/sepsis_suspicion; and the parts of the MIMIC-III
+   Sepsis-3 cohort SQL under inst/sql/mimic_iii/cohorts (sepsis3,
+   sepsis_suspicion, sepsis_suspicion_modified) adapted from its SOFA,
+   antibiotic and suspicion-of-infection queries.
+   Copyright (c) 2019 MIT Laboratory for Computational Physiology
+
+2. MIT-LCP eICU-Code (https://github.com/MIT-LCP/eicu-code)
+   SQL under inst/sql/eicu/concepts_sqls/eicu_code and the concept SQL adapted
+   from it under inst/sql/eicu/concepts_sqls/ehr.
+   Copyright (c) 2015 MIT Laboratory for Computational Physiology
+
+3. BlendedICU (https://github.com/USM-CHU-FGuyon/BlendedICU)
+   The medication list and OMOP ingredient concept IDs (column omop_id_blended)
+   of inst/extdata/rendehr_duration_concepts_config.csv, from auxillary_files/medications_v11.json.
+   The source item and pattern matching in that file is rendehR's own.
+   Copyright (c) 2023 Matthieu Oliver
+
+It also includes data derived from the eICU Collaborative Research Database
+Demo, used under the Open Data Commons Open Database License v1.0 (ODbL):
+
+4. eICU Collaborative Research Database Demo, version 2.0.1
+   (https://physionet.org/content/eicu-crd-demo/2.0.1/)
+   inst/extdata/rendehr_eicu_hicl_drugname_lookup.csv, one drug name per
+   eICU drug code (drughiclseqno), derived from the drug names of the demo's
+   medication and admissiondrug tables. This file is a derivative database of
+   the demo and is made available under the ODbL v1.0
+   (https://opendatacommons.org/licenses/odbl/1-0/).
+   Johnson, A., Pollard, T., Badawi, O., & Raffa, J. (2021). eICU
+   Collaborative Research Database Demo (version 2.0.1). PhysioNet.
+   https://doi.org/10.13026/4mxk-na84
+
+5. MIMIC-IV Clinical Database Demo, version 2.2
+   (https://physionet.org/content/mimic-iv-demo/2.2/)
+   inst/extdata/d_icd_procedures.csv, the demo's hosp/d_icd_procedures table,
+   made available under the ODbL v1.0.
+   Johnson, A., Bulgarelli, L., Pollard, T., Horng, S., Celi, L. A., & Mark, R.
+   (2023). MIMIC-IV Clinical Database Demo (version 2.2). PhysioNet.
+   https://doi.org/10.13026/dp1f-ex47
+
+inst/extdata/d_icd_diagnoses.csv is built by data-raw/d_icd_diagnoses.R from
+the ICD-9-CM and ICD-10-CM code description files published by the Centers for
+Medicare & Medicaid Services (https://www.cms.gov), a US government work in the
+public domain.
+
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

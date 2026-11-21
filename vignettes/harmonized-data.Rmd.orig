@@ -1,0 +1,163 @@
+---
+title: "Harmonized data: reading, reshaping and plotting"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Harmonized data: reading, reshaping and plotting}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+source("precompute-setup.R")
+ehr_use_config(file.path(docs_root, "rendehr-demo/config/ehr_config.json"))
+ehr_connect()
+```
+
+`ehr_connect()` stores the connection details; it does not test them until the
+first query, so a bad login fails at the first read, not at connect time.
+
+`merge_sources()` pools every source into one PostgreSQL schema. The schema
+holds the cohort table, the admission-level flat table, the long time-series
+table and the duration table. The `load_merged_*()` functions read them; each
+takes the schema name you gave `merge_sources()` (here `"rendehr"`).
+
+```{r cohort-info}
+cohort <- load_merged_cohort_info("rendehr")
+nrow(cohort)
+length(unique(cohort$src_patient_id))
+```
+
+`cohort_only = TRUE` is the default: it returns the members of the cohort
+definition. `FALSE` returns every imported row, including context that was
+carried along for look-back but is not part of the cohort.
+
+## One row per admission
+
+The flat table is the analysis frame: one row per admission, with demographics,
+admission characteristics, outcomes, and the first ICU stay's identifiers.
+
+```{r flat}
+flat <- load_merged_flat("rendehr")
+dim(flat)
+flat[1:4, c("src_patient_id", "age", "sex", "admission_type",
+            "hospital_los", "hospital_mortality")]
+```
+
+The `ehr_id` column is the cross-source key. It identifies the same admission
+in every merged table, so joins never depend on a source-specific ID.
+
+## Long time series
+
+The time-series table has one row per measurement: `concept_name`, time and
+value, in a common unit per concept. `cols = "minimal"` keeps only the columns
+needed for analysis and transfers less data.
+
+```{r ts}
+lab <- load_merged_ts(
+  "rendehr", concepts = c("heart_rate", "lactate"),
+  cols = "minimal"
+)
+dim(lab)
+head(lab)
+```
+
+Time is carried twice: `time_since_hadm_min` measures from hospital admission,
+`time_since_icu_min` from ICU admission. Both are in minutes, so the same table
+supports admission-level and ICU-level analyses. `window_min = c(0, 1440)`
+keeps the first 24 hours in SQL, on the admission clock or, with
+`window_ref = "icu"`, the ICU clock.
+
+One patient's stay, in the long format:
+
+```{r patient}
+pid <- flat$src_patient_id[1]
+one <- get_patient_ts("mimic_iv_demo", pid, concepts = "heart_rate")
+head(one[, c("concept_name", "time_since_icu_min", "value", "unit")])
+```
+
+`get_patient_*()` functions read the source schema directly, which is useful
+when you need a single stay rather than a cohort-wide extract.
+`get_patient_flat()` returns one row per admission.
+
+## Wide by time bin
+
+`load_merged_ts_wide()` pivots in SQL: name the concepts and the aggregates you
+want, choose a bin width in minutes, and optionally a window in bin units. With
+hourly bins, `window = c(0, 23)` keeps the first 24 hours.
+
+```{r wide}
+day1 <- load_merged_ts_wide(
+  "rendehr",
+  spec = list(heart_rate = c("mean", "max"), lactate = "max", sbp = "min"),
+  bin_min = 60, window = c(0, 23)
+)
+dim(day1)
+head(day1[, c("ehr_id", "t_bin", "heart_rate_mean", "heart_rate_max", "lactate")])
+```
+
+One aggregate per concept names the column after the concept (`lactate`); two
+or more add the aggregate (`heart_rate_mean`, `heart_rate_max`).
+
+`complete_grid = TRUE` emits every bin in the window, with `NA` where a concept
+was not measured. It regularises the shape only; it does not decide who is
+eligible for the analysis.
+
+`clean = "range"` drops readings outside each concept's plausible range in the
+concept dictionary before aggregating; `ranges` overrides the bounds. Each
+concept gains a `<concept>_n_cleaned` column with the readings dropped in that
+bin, and the `clean_report` attribute gives the totals and bounds per concept:
+
+```{r wide-clean}
+day1_clean <- load_merged_ts_wide(
+  "rendehr", spec = list(heart_rate = "max", lactate = "max"),
+  bin_min = 60, window = c(0, 23), clean = "range"
+)
+attr(day1_clean, "clean_report")
+```
+
+Plotting the cohort's heart rate over the first day is then a join and a line:
+
+```{r trajectory, fig.alt = "Median hourly heart rate in the first 24 hours of admission, split by in-hospital death, in the MIMIC-IV demo Sepsis-3 cohort."}
+library(ggplot2)
+d <- merge(day1, flat[, c("ehr_id", "hospital_mortality")], by = "ehr_id")
+agg <- aggregate(heart_rate_mean ~ t_bin + hospital_mortality, data = d,
+                 FUN = median, na.rm = TRUE)
+ggplot(agg, aes(t_bin, heart_rate_mean,
+                colour = factor(hospital_mortality,
+                                labels = c("Survived", "Died")))) +
+  geom_line(linewidth = 1) +
+  labs(x = "Hours since admission", y = "Median heart rate (bpm)",
+       colour = NULL) +
+  theme_minimal()
+```
+
+## Durations
+
+The duration table has one row per interval concept: drug exposure, ventilation,
+and other state that lasts. `duration_min` is the length in minutes.
+
+```{r dur}
+dur <- load_merged_dur("rendehr")
+dim(dur)
+head(dur[, c("ehr_id", "concept_name", "duration_min")])
+```
+
+## What is in the schema
+
+`list_concepts()` reports the concepts available for a source and their layer:
+the package dictionary, adapted derived concepts, your own SQL, and external
+modules. `concept_summary()` gives counts and value summaries for one concept.
+
+```{r concepts}
+concepts <- list_concepts("mimic_iv_demo")
+table(concepts$schema)
+concepts[concepts$concept_name %in% c("lactate", "creatinine", "sofa"),
+         c("concept_name", "schema", "origin_name")]
+concept_summary("mimic_iv_demo", "lactate")
+```
+
+## Related articles
+
+- `vignette("cohorts")`: how the cohort behind this schema was selected
+- `vignette("pipeline")`: the stages that produce each table
+- `vignette("concepts")`: the concept layers and adding your own

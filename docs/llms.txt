@@ -1,0 +1,776 @@
+# rendehR
+
+rendehR turns raw ICU electronic health records from MIMIC-III, MIMIC-IV
+and eICU-CRD into analysis-ready, harmonized tables. It is
+**cohort-first**: you define the study cohort before any large event
+table is imported, so only the rows your study needs are streamed to
+Parquet, loaded into PostgreSQL and processed. Every derived concept is
+linked to its source, extraction layer and SQL in a provenance registry.
+
+The output is the same for every source: one row per admission or ICU
+stay (**flat**), long-format measurements (**time series**) and
+intervals such as ventilation or vasopressor exposure (**durations**),
+merged across sources into one schema.
+
+![The rendehR pipeline: download raw data, define and import the cohort,
+extract concepts, harmonize and merge the sources,
+analyse.](reference/figures/pipeline.svg)
+
+## Installation
+
+Install from GitHub:
+
+``` r
+# install.packages("pak")
+pak::pak("ATE-DRIVEN-lab/rendehR")
+```
+
+The articles’ plots and the cohort explorer use suggested packages
+(ggplot2, shiny, plotly, DT and others). To install those as well:
+
+``` r
+pak::pak("ATE-DRIVEN-lab/rendehR", dependencies = TRUE)
+```
+
+The articles are on the
+[website](https://ate-driven-lab.github.io/rendehR/). To also keep them
+locally as vignettes, build them while installing:
+
+``` r
+# install.packages("remotes")
+remotes::install_github("ATE-DRIVEN-lab/rendehR", dependencies = TRUE,
+                        build_vignettes = TRUE, force = TRUE)
+```
+
+On Linux the dependencies are compiled from source, which can take most
+of an hour; [Posit Package Manager](https://packagemanager.posit.co)
+serves binaries if you set it as your CRAN repository.
+
+rendehR needs a PostgreSQL server for the full pipeline; DuckDB
+(installed with the package) covers import, cohort tables and concept
+extraction on its own. The interactive explorer uses the suggested
+packages shiny, bslib, bsicons, plotly, DT, shinyWidgets,
+shinycssloaders and survival.
+
+## Example
+
+Build a Sepsis-3 cohort from the open MIMIC-IV demo, merge it and read
+first-day summaries:
+
+``` r
+library(rendehR)
+
+# Writes config/ehr_config.json and config/config_pass.json in the working
+# directory. Add your PostgreSQL credentials to config_pass.json.
+ehr_init_project(src_name = "mimic_iv_demo")
+download_source("mimic_iv_demo")
+
+# Import only the cohort's rows, then run every stage up to the
+# harmonized tables.
+run_one_source(
+  "mimic_iv_demo",
+  db_name = "sepsis_demo",
+  cohort_selection = cohort_selection_options(cohort = "sepsis3")
+)
+
+# Merge one or more sources into an analysis schema ("rendehr").
+merge_sources("mimic_iv_demo", db_name = "sepsis_demo")
+
+ehr_connect("sepsis_demo")
+baseline <- load_merged_flat(schema = "rendehr")
+day_one  <- load_merged_ts_wide(
+  schema  = "rendehr",
+  spec    = list(heart_rate = c("min", "max"), lactate = "max", spo2 = "min"),
+  bin_min = 24 * 60,
+  window  = c(0, 0)
+)
+```
+
+[`list_example_cohorts()`](https://ate-driven-lab.github.io/rendehR/reference/list_example_cohorts.md)
+shows the bundled cohorts (spinal cord injury and Sepsis-3). Your own
+cohort can be an ICD list (`icd_filter_path`), a list of patient or
+admission IDs (`direct_ids_path`), SQL (`cohort_sql`) or an R function
+(`cohort_fn`).
+
+## How it works
+
+[`run_one_source()`](https://ate-driven-lab.github.io/rendehR/reference/run_one_source.md)
+runs these stages in order; each one can also be called, checked and
+rerun on its own:
+
+| Stage              | Function                                                                                                                                                                                                                         | What it does                                                                  |
+|:-------------------|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:------------------------------------------------------------------------------|
+| Cohort import      | [`import_cohort_general()`](https://ate-driven-lab.github.io/rendehR/reference/import_cohort_general.md)                                                                                                                         | Selects the cohort and streams its rows from `.csv.gz` to Parquet with DuckDB |
+| Database load      | [`run_db()`](https://ate-driven-lab.github.io/rendehR/reference/run_db.md)                                                                                                                                                       | Loads the Parquet artifact into PostgreSQL (or a DuckDB file)                 |
+| eICU preprocessing | [`run_raw_mods()`](https://ate-driven-lab.github.io/rendehR/reference/run_raw_mods.md)                                                                                                                                           | Builds the eICU `*_mod` tables that several concepts read                     |
+| Visit windows      | [`build_window_tables()`](https://ate-driven-lab.github.io/rendehR/reference/build_window_tables.md)                                                                                                                             | Admission and ICU timelines                                                   |
+| Cohort table       | [`build_cohort_info_general()`](https://ate-driven-lab.github.io/rendehR/reference/build_cohort_info_general.md), [`build_cohort_annotations()`](https://ate-driven-lab.github.io/rendehR/reference/build_cohort_annotations.md) | One row per hospitalization, with cohort membership                           |
+| Comorbidities      | [`run_comorbidities()`](https://ate-driven-lab.github.io/rendehR/reference/run_comorbidities.md)                                                                                                                                 | Charlson and Elixhauser indices                                               |
+| Injury severity    | [`run_iss()`](https://ate-driven-lab.github.io/rendehR/reference/run_iss.md)                                                                                                                                                     | ISS, NISS and AIS from injury diagnoses                                       |
+| Concepts           | [`run_concepts()`](https://ate-driven-lab.github.io/rendehR/reference/run_concepts.md), [`run_external_concepts()`](https://ate-driven-lab.github.io/rendehR/reference/run_external_concepts.md)                                 | Flat, time-series and duration concepts; adapted MIT-LCP SQL                  |
+| Harmonization      | [`run_harmonized_tables()`](https://ate-driven-lab.github.io/rendehR/reference/run_harmonized_tables.md)                                                                                                                         | Source-level flat, time-series and duration tables                            |
+
+[`merge_sources()`](https://ate-driven-lab.github.io/rendehR/reference/merge_sources.md)
+then combines sources at the admission or ICU-stay level. Times are
+minutes since hospital admission, with minutes since ICU admission kept
+where a stay exists. With `engine = "duckdb"` the cohort is built in a
+local DuckDB file without PostgreSQL; the PostgreSQL-only stages are
+skipped.
+[`run_one_source_test()`](https://ate-driven-lab.github.io/rendehR/reference/run_one_source_test.md)
+resumes a partial run, and
+[`verify_download()`](https://ate-driven-lab.github.io/rendehR/reference/verify_download.md),
+[`verify_db_load()`](https://ate-driven-lab.github.io/rendehR/reference/verify_db_load.md),
+[`verify_cohort()`](https://ate-driven-lab.github.io/rendehR/reference/verify_cohort.md),
+[`verify_concepts()`](https://ate-driven-lab.github.io/rendehR/reference/verify_concepts.md)
+and
+[`verify_harmonized()`](https://ate-driven-lab.github.io/rendehR/reference/verify_harmonized.md)
+check each stage’s output.
+
+## Data sources
+
+| Source         | Release | ICU stays | Patients | Access                 |
+|:---------------|:--------|----------:|---------:|:-----------------------|
+| MIMIC-III      | 1.4     |    61,532 |   46,476 | PhysioNet credentialed |
+| MIMIC-IV       | 3.1     |    94,458 |   65,366 | PhysioNet credentialed |
+| eICU-CRD       | 2.0     |   200,859 |  139,367 | PhysioNet credentialed |
+| MIMIC-III demo | 1.4     |       136 |      100 | Open                   |
+| MIMIC-IV demo  | 2.2     |       140 |      100 | Open                   |
+| eICU-CRD demo  | 2.0.1   |     2,520 |    1,841 | Open                   |
+
+MIMIC-III and MIMIC-IV come from the Beth Israel Deaconess Medical
+Center; eICU-CRD from 208 US hospitals. New sources are added through a
+source definition, identifier mappings and concept recipes
+([`vignette("adding-a-new-source", package = "rendehR")`](https://ate-driven-lab.github.io/rendehR/articles/adding-a-new-source.md)).
+
+## Clinical concepts
+
+| Layer          | Examples                                                                                                                           |
+|:---------------|:-----------------------------------------------------------------------------------------------------------------------------------|
+| Flat           | Demographics, admission and discharge, length of stay, mortality                                                                   |
+| Time series    | Vital signs, blood gases, chemistry and haematology (130 concepts)                                                                 |
+| Durations      | Ventilation, vasopressors, antibiotics and other medication exposures                                                              |
+| Repository SQL | SOFA, SAPS-II, LODS and other scores adapted from MIT-LCP MIMIC-Code and eICU-Code                                                 |
+| Your own       | Project SQL registered with [`register_concept_sql()`](https://ate-driven-lab.github.io/rendehR/reference/register_concept_sql.md) |
+
+Each concept carries its origin, citation and SQL in the provenance
+registry.
+
+## Cohort explorer
+
+``` r
+run_explorer("rendehr", db_name = "sepsis_demo")   # opens http://127.0.0.1:<port>
+```
+
+A Shiny app over the merged schema: cohort overview, filters and a
+characteristics table with standardized mean differences, outcomes with
+Wilson 95% confidence intervals, Kaplan-Meier survival, cross-tabs, a
+per-patient timeline, the concept inventory with a concept builder, and
+project setup that runs the pipeline as background jobs. Studies can add
+their own pages; the spinal cord injury pages
+([`explorer_sci_data()`](https://ate-driven-lab.github.io/rendehR/reference/explorer_sci_data.md))
+are the reference example. The app shows individual-level data and
+listens on `127.0.0.1` only; do not deploy it publicly.
+
+## Learn more
+
+- [`vignette("rendehR", package = "rendehR")`](https://ate-driven-lab.github.io/rendehR/articles/rendehR.md):
+  a first project, step by step
+- [`vignette("projects", package = "rendehR")`](https://ate-driven-lab.github.io/rendehR/articles/projects.md):
+  project folders, configuration and raw data
+- [`vignette("cohorts", package = "rendehR")`](https://ate-driven-lab.github.io/rendehR/articles/cohorts.md):
+  selecting and materializing cohorts
+- [`vignette("pipeline", package = "rendehR")`](https://ate-driven-lab.github.io/rendehR/articles/pipeline.md):
+  the stages, DuckDB and multi-source runs
+- [`vignette("harmonized-data", package = "rendehR")`](https://ate-driven-lab.github.io/rendehR/articles/harmonized-data.md):
+  reading, reshaping and plotting
+- [`vignette("concepts", package = "rendehR")`](https://ate-driven-lab.github.io/rendehR/articles/concepts.md):
+  the concept dictionary, layers and your own SQL
+- [`vignette("explorer", package = "rendehR")`](https://ate-driven-lab.github.io/rendehR/articles/explorer.md):
+  the Shiny cohort explorer
+- [`vignette("sepsis-cohort-definitions", package = "rendehR")`](https://ate-driven-lab.github.io/rendehR/articles/sepsis-cohort-definitions.md):
+  the Sepsis-3 cohort across sources
+- [`vignette("guided-setup-assistant", package = "rendehR")`](https://ate-driven-lab.github.io/rendehR/articles/guided-setup-assistant.md):
+  an interactive setup script
+- [`vignette("adding-a-new-source", package = "rendehR")`](https://ate-driven-lab.github.io/rendehR/articles/adding-a-new-source.md):
+  registering another EHR source
+- [`vignette("mcp", package = "rendehR")`](https://ate-driven-lab.github.io/rendehR/articles/mcp.md):
+  the MCP server and agent skills
+
+The documentation site is at
+<https://ate-driven-lab.github.io/rendehR/>.
+
+## Validation
+
+Each release is checked by an independent validation harness on the demo
+and full datasets: raw-data oracles, concept fidelity, determinism
+across rebuilds, robustness, the explorer and concordance with
+[ricu](https://github.com/eth-mds/ricu). The harness is kept in the
+development repository; its method and results are summarised in the
+[validation
+article](https://ate-driven-lab.github.io/rendehR/articles/validation.html).
+
+`devtools::test()` runs the offline test suite. Tests that need a
+database are skipped unless these variables point at **disposable**
+resources (several tests drop and rebuild schemas):
+
+| Variable                                                                         | Enables                                                                                                                                                                                                                                                                           |
+|:---------------------------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `EHR_TEST_DB`, `EHR_CREDS_PATH`                                                  | access, merge and membership tests on a built demo database                                                                                                                                                                                                                       |
+| `EHR_TEST_PG_DB`                                                                 | PostgreSQL fixture tests (an empty scratch database)                                                                                                                                                                                                                              |
+| `EHR_TEST_JOIN_DB`                                                               | PostgreSQL join regression tests                                                                                                                                                                                                                                                  |
+| `EHR_TEST_E2E_DB`, `EHR_TEST_E2E_RAW_ROOT`                                       | end-to-end build of the demo sources on both engines; the database name must contain `scratch` or `e2e`, and the raw root must hold `mimic_iv_demo/` and `eicu_demo/` as [`download_source()`](https://ate-driven-lab.github.io/rendehR/reference/download_source.md) writes them |
+| `EHR_TEST_EXPLORER_DB`, `EHR_TEST_EXPLORER_SCHEMA`, `EHR_TEST_EXPLORER_RAW_ROOT` | the cohort explorer on a merged schema (read only)                                                                                                                                                                                                                                |
+| `RENDEHR_EXPLORER_SCI_DIR` and related `RENDEHR_EXPLORER_SCI_*`                  | the spinal cord injury explorer pages                                                                                                                                                                                                                                             |
+| `EHR_TEST_MCP_CONFIG`, `EHR_TEST_MCP_SOURCE`                                     | the bundled MCP server’s database tools (read only)                                                                                                                                                                                                                               |
+
+PostgreSQL credentials come from `PGHOST`, `PGUSER` and `PGPASSWORD`.
+
+## AI assistant integration
+
+A local MCP server and three skills (`rendehr-user`,
+`rendehr-add-concept`, `rendehr-add-source`) are bundled under
+`inst/mcp`; see its
+[README](https://ate-driven-lab.github.io/rendehR/inst/mcp/README.md).
+Installing the package does not start the server or activate the skills.
+
+## Citation
+
+``` r
+citation("rendehR")
+```
+
+> Mussavi Rizi M, Shein V, Torres-Espin A (2026). *rendehR: Multi-Source
+> EHR Harmonization Pipeline*. R package version 1.0.0,
+> <https://github.com/ATE-DRIVEN-lab/rendehR>.
+
+## License
+
+rendehR is free software under the [GNU General Public License, version
+3](https://ate-driven-lab.github.io/rendehR/LICENSE.md), the license of
+ricu, on whose concept definitions part of the concept layer is
+modelled. It includes SQL from MIT-LCP MIMIC-Code and eICU-Code, and its
+medication list with OMOP ingredient IDs follows BlendedICU, both under
+the MIT License; their notices are kept in
+[`inst/COPYRIGHTS`](https://ate-driven-lab.github.io/rendehR/inst/COPYRIGHTS).
+
+## Code of Conduct
+
+Please note that rendehR is released with a [Contributor Code of
+Conduct](https://ate-driven-lab.github.io/rendehR/CODE_OF_CONDUCT.html).
+By contributing to this project, you agree to abide by its terms.
+
+# Package index
+
+## Project setup and configuration
+
+Create, load and inspect the project configuration and credentials that
+every other function reads from.
+
+- [`ehr_config()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_config.md)
+  : Return the active project configuration
+- [`ehr_use_config()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_use_config.md)
+  : Use a project configuration for this R session
+- [`ehr_load_config()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_load_config.md)
+  : Load project configuration from a JSON file
+- [`ehr_write_config()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_write_config.md)
+  : Write a project configuration JSON file
+- [`ehr_check_config()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_check_config.md)
+  : Check a project configuration
+- [`ehr_create_config_template()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_create_config_template.md)
+  : Create a starter project configuration file
+- [`ehr_config_path()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_config_path.md)
+  : Path to a bundled package config file
+- [`ehr_config_root()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_config_root.md)
+  : Root of the external user config directory
+- [`ehr_paths()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_paths.md)
+  : Build the standard project path list for a source
+- [`ehr_init_project()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_init_project.md)
+  : Create project directories for a source
+- [`ehr_create_credentials_template()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_create_credentials_template.md)
+  : Create a starter credentials file
+- [`load_credentials()`](https://ate-driven-lab.github.io/rendehR/reference/load_credentials.md)
+  : Load Postgres and PhysioNet credentials
+- [`set_physionet_env()`](https://ate-driven-lab.github.io/rendehR/reference/set_physionet_env.md)
+  : Set credentials for a protected PhysioNet operation
+- [`load_src_cfg()`](https://ate-driven-lab.github.io/rendehR/reference/load_src_cfg.md)
+  : Load a single source config block from a data-sources JSON file
+- [`get_dataset_config()`](https://ate-driven-lab.github.io/rendehR/reference/get_dataset_config.md)
+  : Get source dataset configuration
+- [`get_id_cols()`](https://ate-driven-lab.github.io/rendehR/reference/get_id_cols.md)
+  : Get identifier columns for a source table
+- [`src_family()`](https://ate-driven-lab.github.io/rendehR/reference/src_family.md)
+  : Canonical source family name
+- [`src_schema_names()`](https://ate-driven-lab.github.io/rendehR/reference/src_schema_names.md)
+  : Build the standard Postgres schema name list for a source
+
+## Guided assistants
+
+Interactive helpers that generate a setup script or scaffold a new
+source.
+
+- [`ehr_setup_assistant()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_setup_assistant.md)
+  : Generate a guided rendehR setup script
+
+- [`write_setup_script()`](https://ate-driven-lab.github.io/rendehR/reference/write_setup_script.md)
+  : Write a generated setup script to disk
+
+- [`ehr_add_source_assistant()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_add_source_assistant.md)
+  : Interactive assistant for adding a new data source
+
+- [`ehr_suggest_next()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_suggest_next.md)
+  : Suggest the next rendehR pipeline command
+
+- [`print(`*`<ehr_setup_plan>`*`)`](https://ate-driven-lab.github.io/rendehR/reference/print.ehr_setup_plan.md)
+  :
+
+  Print an `rendehR` setup assistant plan
+
+- [`print(`*`<ehr_add_source_plan>`*`)`](https://ate-driven-lab.github.io/rendehR/reference/print.ehr_add_source_plan.md)
+  :
+
+  Print an `rendehR` add-source assistant plan
+
+- [`print(`*`<ehr_suggestion>`*`)`](https://ate-driven-lab.github.io/rendehR/reference/print.ehr_suggestion.md)
+  : Print a suggested next pipeline step
+
+## Download raw data
+
+Fetch raw source tables from PhysioNet as Parquet.
+
+- [`download_source()`](https://ate-driven-lab.github.io/rendehR/reference/download_source.md)
+  : Download raw EHR source tables
+- [`download_sources()`](https://ate-driven-lab.github.io/rendehR/reference/download_sources.md)
+  : Download raw EHR source tables for multiple sources
+
+## Cohort definition and materialization
+
+Define the study cohort first, then stream only cohort-relevant rows
+into Parquet and load them into a database backend.
+
+- [`build_cohort()`](https://ate-driven-lab.github.io/rendehR/reference/build_cohort.md)
+  : High-level pipeline API - cfg-accepting wrappers
+- [`cohort_key()`](https://ate-driven-lab.github.io/rendehR/reference/cohort_key.md)
+  : Return the primary cohort key column for a source
+- [`subset_parquet_by_key()`](https://ate-driven-lab.github.io/rendehR/reference/subset_parquet_by_key.md)
+  : Safely subset one parquet file to rows matching key values
+- [`import_cohort_general()`](https://ate-driven-lab.github.io/rendehR/reference/import_cohort_general.md)
+  : Materialize the current cohort as canonical Parquet
+- [`cache_raw_parquet_duckdb()`](https://ate-driven-lab.github.io/rendehR/reference/cache_raw_parquet_duckdb.md)
+  : Materialize a source's raw CSVs as a parquet cache for fast cohort
+  selection
+- [`cohort_selection_options()`](https://ate-driven-lab.github.io/rendehR/reference/cohort_selection_options.md)
+  : Specify cohort selection options
+- [`build_sepsis_cohort()`](https://ate-driven-lab.github.io/rendehR/reference/build_sepsis_cohort.md)
+  : Build a Sepsis-3 cohort ID list for a source, optionally importing
+  it
+- [`run_sepsis3_example()`](https://ate-driven-lab.github.io/rendehR/reference/run_sepsis3_example.md)
+  : Run the Sepsis-3 reference pipeline and verify output
+- [`select_cohort_ids()`](https://ate-driven-lab.github.io/rendehR/reference/select_cohort_ids.md)
+  : Select and normalize cohort identifiers
+- [`print(`*`<ehr_selection_plan>`*`)`](https://ate-driven-lab.github.io/rendehR/reference/print.ehr_selection_plan.md)
+  : Print a cohort selection plan
+- [`run_cohort_info()`](https://ate-driven-lab.github.io/rendehR/reference/run_cohort_info.md)
+  : Build and optionally publish cohort information
+- [`scid_classify()`](https://ate-driven-lab.github.io/rendehR/reference/scid_classify.md)
+  : SCI-specific classify_fn for use with run_cohort_info()
+- [`build_cohort_info()`](https://ate-driven-lab.github.io/rendehR/reference/build_cohort_info.md)
+  : Build generic cohort information
+- [`build_cohort_info_general()`](https://ate-driven-lab.github.io/rendehR/reference/build_cohort_info_general.md)
+  : Build cohort_info from generalized cohort_index metadata
+- [`build_cohort_info_general_duckdb()`](https://ate-driven-lab.github.io/rendehR/reference/build_cohort_info_general_duckdb.md)
+  : Build generalized cohort_info in a DuckDB database
+- [`build_cohort_annotations()`](https://ate-driven-lab.github.io/rendehR/reference/build_cohort_annotations.md)
+  : Build cohort annotation tables (ICD lookup, injury cause, derived
+  flags)
+- [`build_cohort_annotations_general()`](https://ate-driven-lab.github.io/rendehR/reference/build_cohort_annotations_general.md)
+  : Build generalized cohort annotation tables
+- [`load_cohort_parquet_to_postgres()`](https://ate-driven-lab.github.io/rendehR/reference/load_cohort_parquet_to_postgres.md)
+  : Load all parquet files from a cohort directory into Postgres
+- [`load_cohort_parquet_to_duckdb()`](https://ate-driven-lab.github.io/rendehR/reference/load_cohort_parquet_to_duckdb.md)
+  : Load all parquet files from a cohort directory into DuckDB
+- [`materialize_cohort_duckdb()`](https://ate-driven-lab.github.io/rendehR/reference/materialize_cohort_duckdb.md)
+  : Materialize the current cohort as a persistent DuckDB database
+- [`list_example_cohorts()`](https://ate-driven-lab.github.io/rendehR/reference/list_example_cohorts.md)
+  : List the example cohorts bundled with the package
+
+## Pipeline stages
+
+End-to-end and per-stage runners for one or many sources.
+
+- [`run_one_source()`](https://ate-driven-lab.github.io/rendehR/reference/run_one_source.md)
+  : Run an EHR processing pipeline for one source
+- [`pipeline_options`](https://ate-driven-lab.github.io/rendehR/reference/pipeline_options.md)
+  : Configure the source pipeline
+- [`window_options()`](https://ate-driven-lab.github.io/rendehR/reference/window_options.md)
+  : Specify observation-window options
+- [`loading_options()`](https://ate-driven-lab.github.io/rendehR/reference/loading_options.md)
+  : Specify import and database-loading options
+- [`enrichment_options()`](https://ate-driven-lab.github.io/rendehR/reference/enrichment_options.md)
+  : Specify cohort-enrichment options
+- [`concept_options()`](https://ate-driven-lab.github.io/rendehR/reference/concept_options.md)
+  : Specify concept-extraction options
+- [`harmonization_options()`](https://ate-driven-lab.github.io/rendehR/reference/harmonization_options.md)
+  : Specify harmonized-output options
+- [`execution_options()`](https://ate-driven-lab.github.io/rendehR/reference/execution_options.md)
+  : Specify pipeline execution options
+- [`pipeline_compatibility`](https://ate-driven-lab.github.io/rendehR/reference/pipeline_compatibility.md)
+  : Compatibility arguments for the source pipeline
+- [`run_one_source_test()`](https://ate-driven-lab.github.io/rendehR/reference/run_one_source_test.md)
+  : Run a source pipeline with validation-aware resume checks
+- [`run_sources()`](https://ate-driven-lab.github.io/rendehR/reference/run_sources.md)
+  : Run all pipeline stages for multiple sources
+- [`run_scid_example()`](https://ate-driven-lab.github.io/rendehR/reference/run_scid_example.md)
+  : Run the SCI reference pipeline and verify output
+- [`run_db()`](https://ate-driven-lab.github.io/rendehR/reference/run_db.md)
+  : Load cohort parquet into Postgres
+- [`run_db_duckdb()`](https://ate-driven-lab.github.io/rendehR/reference/run_db_duckdb.md)
+  : Create a cohort database in DuckDB
+- [`run_raw_mods()`](https://ate-driven-lab.github.io/rendehR/reference/run_raw_mods.md)
+  : Build modified (\_mod) versions of raw tables for a source
+- [`run_raw_mods_duckdb()`](https://ate-driven-lab.github.io/rendehR/reference/run_raw_mods_duckdb.md)
+  : Build modified (\_mod) raw tables in a DuckDB cohort database
+- [`run_concepts()`](https://ate-driven-lab.github.io/rendehR/reference/run_concepts.md)
+  : Extract concepts for one source
+- [`build_window_tables()`](https://ate-driven-lab.github.io/rendehR/reference/build_window_tables.md)
+  : Build admission, ICU, and visit window tables for any source
+- [`build_icu_windows()`](https://ate-driven-lab.github.io/rendehR/reference/build_icu_windows.md)
+  : Build ICU windows for a source
+- [`build_visit_windows()`](https://ate-driven-lab.github.io/rendehR/reference/build_visit_windows.md)
+  : Build visit windows for a source
+
+## Clinical concepts
+
+Generate, register, clean and inspect atomic and handcrafted clinical
+concepts, with concept-level provenance.
+
+- [`extract_concepts()`](https://ate-driven-lab.github.io/rendehR/reference/extract_concepts.md)
+  : Extract atomic and handcrafted concepts for the configured source
+- [`run_atomic_concepts_unified()`](https://ate-driven-lab.github.io/rendehR/reference/run_atomic_concepts_unified.md)
+  : Execute atomic concept SQL for all concepts matching a source and
+  type
+- [`concept_unit_conversion_func()`](https://ate-driven-lab.github.io/rendehR/reference/concept_unit_conversion_func.md)
+  : Build SQL for a concept's unit conversion
+- [`run_external_concepts()`](https://ate-driven-lab.github.io/rendehR/reference/run_external_concepts.md)
+  : Run MIMIC-code / eICU-code handcrafted SQL concepts.
+- [`run_flat_sql_concepts()`](https://ate-driven-lab.github.io/rendehR/reference/run_flat_sql_concepts.md)
+  : Execute flat SQL concept files for one source
+- [`register_concept_sql()`](https://ate-driven-lab.github.io/rendehR/reference/register_concept_sql.md)
+  : Extension utilities: bring-your-own SQL + project workspace helpers.
+- [`register_concept_provenance()`](https://ate-driven-lab.github.io/rendehR/reference/register_concept_provenance.md)
+  : Register provenance metadata for one or more concepts
+- [`list_concepts()`](https://ate-driven-lab.github.io/rendehR/reference/list_concepts.md)
+  : List all concept tables available for a source
+- [`search_concepts()`](https://ate-driven-lab.github.io/rendehR/reference/search_concepts.md)
+  : Search for concept names matching a pattern
+- [`concept_summary()`](https://ate-driven-lab.github.io/rendehR/reference/concept_summary.md)
+  : Summary statistics for one concept
+- [`clean_by_range()`](https://ate-driven-lab.github.io/rendehR/reference/clean_by_range.md)
+  : Clean concept values using config-defined plausibility ranges
+- [`clean_by_outlier()`](https://ate-driven-lab.github.io/rendehR/reference/clean_by_outlier.md)
+  : Clean concept values using statistical outlier rules
+
+## Derived clinical measures
+
+Comorbidity indices, injury severity scores and ICU timelines.
+
+- [`run_comorbidities()`](https://ate-driven-lab.github.io/rendehR/reference/run_comorbidities.md)
+  : Compute hospital-level Charlson and Elixhauser comorbidities
+- [`run_iss()`](https://ate-driven-lab.github.io/rendehR/reference/run_iss.md)
+  : Compute hospital-level injury severity measures
+- [`make_icu_timeline()`](https://ate-driven-lab.github.io/rendehR/reference/make_icu_timeline.md)
+  : Build an ICU-assigned timeline from a native-grain harmonized table
+- [`build_eicu_diagnosis_icd_parquet()`](https://ate-driven-lab.github.io/rendehR/reference/build_eicu_diagnosis_icd_parquet.md)
+  : Build a normalized eICU diagnosis ICD parquet table from CSV files
+
+## Harmonization and merging
+
+Build flat, time-series and duration outputs and merge them across
+sources.
+
+- [`harmonize_concepts()`](https://ate-driven-lab.github.io/rendehR/reference/harmonize_concepts.md)
+  : Build harmonized ts_tab and flat_tab output tables
+- [`run_harmonized_tables()`](https://ate-driven-lab.github.io/rendehR/reference/run_harmonized_tables.md)
+  : Build harmonized ts_tab and flat_tab output tables for one source
+- [`merge_sources()`](https://ate-driven-lab.github.io/rendehR/reference/merge_sources.md)
+  : Merge harmonized source tables across sources into one schema.
+
+## Accessing harmonized data
+
+Connect to the database and pull tables, concepts and patients into
+tibbles.
+
+- [`ehr_connect()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_connect.md)
+  : Store database credentials for use by all fetch\_\* functions
+
+- [`ehr_disconnect()`](https://ate-driven-lab.github.io/rendehR/reference/ehr_disconnect.md)
+  : Clear stored credentials
+
+- [`list_sources()`](https://ate-driven-lab.github.io/rendehR/reference/list_sources.md)
+  : List all rendehR sources present in the database
+
+- [`list_tables()`](https://ate-driven-lab.github.io/rendehR/reference/list_tables.md)
+  : List all tables in a source schema
+
+- [`peek_table()`](https://ate-driven-lab.github.io/rendehR/reference/peek_table.md)
+  : Preview the first N rows of any table
+
+- [`fetch_table()`](https://ate-driven-lab.github.io/rendehR/reference/fetch_table.md)
+  : Fetch a table from any source schema into a tibble
+
+- [`fetch_concept()`](https://ate-driven-lab.github.io/rendehR/reference/fetch_concept.md)
+  : Fetch one atomic concept table into a tibble
+
+- [`fetch_concepts()`](https://ate-driven-lab.github.io/rendehR/reference/fetch_concepts.md)
+  : Fetch multiple concept tables and stack them into long format
+
+- [`fetch_concepts_wide()`](https://ate-driven-lab.github.io/rendehR/reference/fetch_concepts_wide.md)
+  : Pivot the harmonized time series into wide format (one column per
+  concept)
+
+- [`get_patient_flat()`](https://ate-driven-lab.github.io/rendehR/reference/get_patient_flat.md)
+  : Fetch the flat (baseline) row for one patient
+
+- [`get_patient_ts()`](https://ate-driven-lab.github.io/rendehR/reference/get_patient_ts.md)
+  : Fetch all time-series data for one patient
+
+- [`load_cohort_info()`](https://ate-driven-lab.github.io/rendehR/reference/load_cohort_info.md)
+  : Fetch the cohort_info table for a source
+
+- [`load_admission_windows()`](https://ate-driven-lab.github.io/rendehR/reference/load_admission_windows.md)
+  : Fetch the admission_windows table for a source
+
+- [`load_icu_windows()`](https://ate-driven-lab.github.io/rendehR/reference/load_icu_windows.md)
+  : Fetch the icu_windows table for a source
+
+- [`load_visit_windows()`](https://ate-driven-lab.github.io/rendehR/reference/load_visit_windows.md)
+  : Fetch the visit_windows table for a source
+
+- [`load_merged_cohort_info()`](https://ate-driven-lab.github.io/rendehR/reference/load_merged_cohort_info.md)
+  : Load the merged cohort_info table from any merged schema
+
+- [`load_merged_flat()`](https://ate-driven-lab.github.io/rendehR/reference/load_merged_flat.md)
+  : Load the merged flat table from any merged schema
+
+- [`load_merged_dur()`](https://ate-driven-lab.github.io/rendehR/reference/load_merged_dur.md)
+  : Load the merged duration table from any merged schema
+
+- [`load_merged_dur_wide()`](https://ate-driven-lab.github.io/rendehR/reference/load_merged_dur_wide.md)
+  : Pivot the merged duration table into a time-binned wide grid
+
+- [`load_merged_ts()`](https://ate-driven-lab.github.io/rendehR/reference/load_merged_ts.md)
+  : Load the merged timeseries table from any merged schema
+
+- [`load_merged_ts_wide()`](https://ate-driven-lab.github.io/rendehR/reference/load_merged_ts_wide.md)
+  : Pivot the merged time series into wide format (one column per
+  concept)
+
+- [`cohort_summary()`](https://ate-driven-lab.github.io/rendehR/reference/cohort_summary.md)
+  : High-level summary of a source cohort
+
+- [`browse_source()`](https://ate-driven-lab.github.io/rendehR/reference/browse_source.md)
+  [`open_source()`](https://ate-driven-lab.github.io/rendehR/reference/browse_source.md)
+  : Browse one source schema with interactive \$ access
+
+- [`browse_ehr_db_flex()`](https://ate-driven-lab.github.io/rendehR/reference/browse_ehr_db_flex.md)
+  : Browse all EHR database tables with flexible access
+
+- [`disconnect_ehr_db()`](https://ate-driven-lab.github.io/rendehR/reference/disconnect_ehr_db.md)
+  :
+
+  Disconnect a database browser returned by
+  [`browse_ehr_db_flex()`](https://ate-driven-lab.github.io/rendehR/reference/browse_ehr_db_flex.md)
+
+- [`print(`*`<ehr_source>`*`)`](https://ate-driven-lab.github.io/rendehR/reference/print.ehr_source.md)
+  : Print a lazy source browser
+
+- [`print(`*`<ehr_db_flex_browser>`*`)`](https://ate-driven-lab.github.io/rendehR/reference/print.ehr_db_flex_browser.md)
+  : Print a flexible database browser
+
+## Patient subgroups and time windows
+
+Filter an existing cohort into subgroups and time windows, then
+materialize them.
+
+- [`build_subcohort()`](https://ate-driven-lab.github.io/rendehR/reference/build_subcohort.md)
+  : Build a patient subgroup ID list by filtering cohort_info
+- [`set_active_cohort()`](https://ate-driven-lab.github.io/rendehR/reference/set_active_cohort.md)
+  : Activate a patient subgroup filter for a source
+- [`active_cohort_info()`](https://ate-driven-lab.github.io/rendehR/reference/active_cohort_info.md)
+  : Show currently active patient subgroup filters
+- [`clear_active_cohort()`](https://ate-driven-lab.github.io/rendehR/reference/clear_active_cohort.md)
+  : Clear the active patient subgroup filter
+- [`set_time_window()`](https://ate-driven-lab.github.io/rendehR/reference/set_time_window.md)
+  : Set the time window reference for a source
+- [`active_time_window_info()`](https://ate-driven-lab.github.io/rendehR/reference/active_time_window_info.md)
+  : Show currently active time window filters
+- [`clear_time_window()`](https://ate-driven-lab.github.io/rendehR/reference/clear_time_window.md)
+  : Clear the time window filter
+- [`materialize_subcohort()`](https://ate-driven-lab.github.io/rendehR/reference/materialize_subcohort.md)
+  : Materialize a patient subgroup as new Postgres schemas
+- [`drop_subcohort()`](https://ate-driven-lab.github.io/rendehR/reference/drop_subcohort.md)
+  : Drop all schemas for a materialized subgroup
+
+## Cohort explorer
+
+Interactive Shiny explorer of a merged schema: cohort overview and
+filters, Table 1, outcomes and survival, one patient’s time series read
+live, concepts and data quality. Optional study pages (spinal cord
+injury as the reference example).
+
+- [`run_explorer()`](https://ate-driven-lab.github.io/rendehR/reference/run_explorer.md)
+  : Run the cohort explorer
+- [`explorer_app()`](https://ate-driven-lab.github.io/rendehR/reference/explorer_app.md)
+  : Build the cohort explorer Shiny app
+- [`explorer_data()`](https://ate-driven-lab.github.io/rendehR/reference/explorer_data.md)
+  : Build the data bundle for the cohort explorer
+- [`explorer_patient_ts()`](https://ate-driven-lab.github.io/rendehR/reference/explorer_patient_ts.md)
+  [`explorer_patient_dur()`](https://ate-driven-lab.github.io/rendehR/reference/explorer_patient_ts.md)
+  : Read one patient's harmonized time series for the explorer
+- [`explorer_sci_data()`](https://ate-driven-lab.github.io/rendehR/reference/explorer_sci_data.md)
+  [`explorer_add_sci()`](https://ate-driven-lab.github.io/rendehR/reference/explorer_sci_data.md)
+  : Load the optional SCI pages of the cohort explorer
+
+## Writing and exporting
+
+Push data back into a schema or export it to Parquet / gzip CSV.
+
+- [`write_table()`](https://ate-driven-lab.github.io/rendehR/reference/write_table.md)
+  : Write a data frame to a source schema
+- [`write_csv_to_schema()`](https://ate-driven-lab.github.io/rendehR/reference/write_csv_to_schema.md)
+  : Write a CSV file directly to a source schema
+- [`write_lookup_table()`](https://ate-driven-lab.github.io/rendehR/reference/write_lookup_table.md)
+  : Write a data frame as a lookup table in Postgres
+- [`export_query()`](https://ate-driven-lab.github.io/rendehR/reference/export_query.md)
+  : Export any SQL query to parquet or csv.gz
+- [`export_table_parquet()`](https://ate-driven-lab.github.io/rendehR/reference/export_table_parquet.md)
+  : Export a table or query result to a Parquet dataset (chunked, low
+  RAM)
+- [`export_table_csv_gz()`](https://ate-driven-lab.github.io/rendehR/reference/export_table_csv_gz.md)
+  : Export a table or query result to a gzip-compressed CSV (chunked,
+  low RAM)
+
+## Database utilities
+
+Low-level PostgreSQL and DuckDB helpers used throughout the pipeline.
+
+- [`connect_postgres()`](https://ate-driven-lab.github.io/rendehR/reference/connect_postgres.md)
+  : Open a connection to a Postgres database
+- [`connect_duckdb()`](https://ate-driven-lab.github.io/rendehR/reference/connect_duckdb.md)
+  : Open a connection to a DuckDB cohort database
+- [`ensure_database_exists()`](https://ate-driven-lab.github.io/rendehR/reference/ensure_database_exists.md)
+  : Create the target database if it does not exist
+- [`create_schemas()`](https://ate-driven-lab.github.io/rendehR/reference/create_schemas.md)
+  : Create all schemas in a schema_names list if they don't exist
+- [`create_index()`](https://ate-driven-lab.github.io/rendehR/reference/create_index.md)
+  : Create a Postgres index if it doesn't already exist
+- [`get_table_from_db()`](https://ate-driven-lab.github.io/rendehR/reference/get_table_from_db.md)
+  : Fetch a table (or the first n rows) from Postgres into a tibble
+- [`run_sql_file()`](https://ate-driven-lab.github.io/rendehR/reference/run_sql_file.md)
+  : Execute a single .sql file against an open connection
+- [`run_sql_dir()`](https://ate-driven-lab.github.io/rendehR/reference/run_sql_dir.md)
+  : Execute all .sql files in a directory, sorted alphabetically
+- [`adapt_sql_for_duckdb()`](https://ate-driven-lab.github.io/rendehR/reference/adapt_sql_for_duckdb.md)
+  : Adapt conservative PostgreSQL SQL syntax to DuckDB
+- [`browse_psql()`](https://ate-driven-lab.github.io/rendehR/reference/browse_psql.md)
+  : Browse databases on a Postgres server
+- [`suggest_match()`](https://ate-driven-lab.github.io/rendehR/reference/suggest_match.md)
+  : Suggest close matches for a query string against a set of choices
+
+## Dropping objects
+
+Safely remove tables, schemas and databases.
+
+- [`drop_table()`](https://ate-driven-lab.github.io/rendehR/reference/drop_table.md)
+  : Safely drop a single table from a source schema
+- [`drop_relation()`](https://ate-driven-lab.github.io/rendehR/reference/drop_relation.md)
+  : Drop a single relation (table, view, or materialized view) by name
+- [`drop_schema()`](https://ate-driven-lab.github.io/rendehR/reference/drop_schema.md)
+  : Safely drop an entire schema for a source
+- [`drop_source_schemas()`](https://ate-driven-lab.github.io/rendehR/reference/drop_source_schemas.md)
+  : Safely drop all schemas for a source
+- [`drop_merged_schema()`](https://ate-driven-lab.github.io/rendehR/reference/drop_merged_schema.md)
+  : Safely drop a merged schema
+- [`drop_database()`](https://ate-driven-lab.github.io/rendehR/reference/drop_database.md)
+  : Drop a Postgres database entirely
+
+## Extending rendehR
+
+Register new source families and set up project-specific workspaces.
+
+- [`register_source()`](https://ate-driven-lab.github.io/rendehR/reference/register_source.md)
+  : Register a data source family
+- [`list_registered_sources()`](https://ate-driven-lab.github.io/rendehR/reference/list_registered_sources.md)
+  : List registered source families
+- [`validate_source_config()`](https://ate-driven-lab.github.io/rendehR/reference/validate_source_config.md)
+  : Validate a source configuration
+- [`add_source_wizard()`](https://ate-driven-lab.github.io/rendehR/reference/add_source_wizard.md)
+  : Scaffold a new data source
+- [`init_project_schema()`](https://ate-driven-lab.github.io/rendehR/reference/init_project_schema.md)
+  : Create a dedicated project schema in the connected database
+- [`clone_source_to_db()`](https://ate-driven-lab.github.io/rendehR/reference/clone_source_to_db.md)
+  : Copy a source's schemas into a different Postgres database
+
+## Validation
+
+Stage-by-stage checks that each pipeline step produced what it should
+have.
+
+- [`verify_download()`](https://ate-driven-lab.github.io/rendehR/reference/verify_download.md)
+  : Verify a source's cohort Parquet artifact
+- [`verify_cohort()`](https://ate-driven-lab.github.io/rendehR/reference/verify_cohort.md)
+  : Verify cohort anchor table was built correctly
+- [`verify_db_load()`](https://ate-driven-lab.github.io/rendehR/reference/verify_db_load.md)
+  : Verify raw tables were loaded into Postgres
+- [`verify_concepts()`](https://ate-driven-lab.github.io/rendehR/reference/verify_concepts.md)
+  : Verify atomic concept tables were created
+- [`verify_handcrafted()`](https://ate-driven-lab.github.io/rendehR/reference/verify_handcrafted.md)
+  : Verify handcrafted concept tables (SOFA, vitalsign, scores, etc.)
+- [`verify_harmonized()`](https://ate-driven-lab.github.io/rendehR/reference/verify_harmonized.md)
+  : Verify harmonized ts_tab, flat_tab, and dur_tab outputs
+- [`validate_concepts_against_ricu()`](https://ate-driven-lab.github.io/rendehR/reference/validate_concepts_against_ricu.md)
+  : Compare concept config item IDs against ricu's concept dictionary
+- [`validate_concept_config()`](https://ate-driven-lab.github.io/rendehR/reference/validate_concept_config.md)
+  : Check a concept configuration for invalid rows
+
+# Articles
+
+### Getting started
+
+- [Get started with
+  rendehR](https://ate-driven-lab.github.io/rendehR/articles/rendehR.md):
+- [Projects, configuration and raw
+  data](https://ate-driven-lab.github.io/rendehR/articles/projects.md):
+
+### Working with data
+
+- [Cohorts: selection and
+  materialization](https://ate-driven-lab.github.io/rendehR/articles/cohorts.md):
+- [The pipeline, stage by
+  stage](https://ate-driven-lab.github.io/rendehR/articles/pipeline.md):
+- [Harmonized data: reading, reshaping and
+  plotting](https://ate-driven-lab.github.io/rendehR/articles/harmonized-data.md):
+- [Concepts: the dictionary, the layers, and your own
+  SQL](https://ate-driven-lab.github.io/rendehR/articles/concepts.md):
+- [The cohort
+  explorer](https://ate-driven-lab.github.io/rendehR/articles/explorer.md):
+
+### Special topics
+
+- [Sepsis-3 cohorts across
+  sources](https://ate-driven-lab.github.io/rendehR/articles/sepsis-cohort-definitions.md):
+- [The guided setup
+  assistant](https://ate-driven-lab.github.io/rendehR/articles/guided-setup-assistant.md):
+- [Adding a new data
+  source](https://ate-driven-lab.github.io/rendehR/articles/adding-a-new-source.md):
+- [The MCP server and the agent
+  skills](https://ate-driven-lab.github.io/rendehR/articles/mcp.md):
+
+### Reference material
+
+- [Data
+  sources](https://ate-driven-lab.github.io/rendehR/articles/data-sources.md):
+- [Concept
+  dictionary](https://ate-driven-lab.github.io/rendehR/articles/concept-dictionary.md):
+- [Validation](https://ate-driven-lab.github.io/rendehR/articles/validation.md):
+- [Troubleshooting](https://ate-driven-lab.github.io/rendehR/articles/troubleshooting.md):
+- [Glossary](https://ate-driven-lab.github.io/rendehR/articles/glossary.md):

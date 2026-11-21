@@ -1,0 +1,8 @@
+bibentry(
+  bibtype = "Manual",
+  title = "rendehR: Multi-Source EHR Harmonization Pipeline",
+  author = c(person("Marzieh", "Mussavi Rizi"), person("Vladyslav", "Shein"), person("Abel", "Torres-Espin")),
+  year = "2026",
+  note = paste("R package version", meta$Version),
+  url = "https://github.com/ATE-DRIVEN-lab/rendehR"
+)

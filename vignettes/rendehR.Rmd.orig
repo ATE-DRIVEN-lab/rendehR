@@ -1,0 +1,193 @@
+---
+title: "Get started with rendehR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get started with rendehR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+source("precompute-setup.R")
+unlink(file.path(docs_root, "rendehr-demo"), recursive = TRUE)
+for (db in "rendehr_demo") try(drop_database(db, dry_run = FALSE, confirm = db, creds = list(postgres = list(
+  host = Sys.getenv("PGHOST", "localhost"), port = as.integer(Sys.getenv("PGPORT", "5432")),
+  user = Sys.getenv("PGUSER", "postgres"), password = Sys.getenv("PGPASSWORD")))), silent = TRUE)
+```
+
+This article builds a small cohort from the open MIMIC-IV demo, end to end: a
+project folder, the raw files, the cohort, the harmonized tables, and a first
+look at the data. It takes a few minutes and needs no PhysioNet account. Every
+output below was produced by running the code shown.
+
+## What you need
+
+- R 4.1 or later, with rendehR installed:
+
+  ```r
+  install.packages("pak")
+  pak::pak("ATE-DRIVEN-lab/rendehR", dependencies = TRUE)
+  ```
+
+  `dependencies = TRUE` also installs the suggested packages, among them
+  ggplot2 for the plot below and shiny for the explorer.
+
+- A PostgreSQL server on which your user may create databases. rendehR creates
+  the database it is told to use.
+
+## Create a project
+
+A project is a folder that holds the configuration, the raw files and the
+cohort files. `ehr_init_project()` creates it:
+
+```{r init}
+library(rendehR)
+ehr_init_project(src_name = "mimic_iv_demo", base_dir = "rendehr-demo")
+```
+
+```{r creds, include = FALSE}
+demo_credentials("rendehr-demo")
+cfg <- jsonlite::read_json("rendehr-demo/config/ehr_config.json")
+cfg$database$db_name <- "rendehr_demo"
+cfg$cohort$profile <- "scid"   # this tutorial uses the SCI reference profile
+jsonlite::write_json(cfg, "rendehr-demo/config/ehr_config.json", auto_unbox = TRUE, pretty = TRUE, null = "null")
+```
+
+Two files in `rendehr-demo/config/` need your attention. In `ehr_config.json`,
+set the database rendehR should use (it is created on first use). This tutorial
+also sets `cohort.profile` to `"scid"`, the SCI reference implementation, so the
+clinical enrichment stages run; new projects default to `"generic"`.
+
+```json
+"database": {
+  "db_name": "rendehr_demo",
+  "credentials_path": "config/config_pass.json"
+}
+```
+
+and put your PostgreSQL login in `config_pass.json` (the `PGHOST`, `PGPORT`,
+`PGUSER` and `PGPASSWORD` environment variables override it):
+
+```json
+{
+  "postgres": {"host": "localhost", "port": 5432, "user": "postgres", "password": "..."}
+}
+```
+
+Then make it the active project, so later calls know where the files and the
+database are:
+
+```{r use-config}
+ehr_use_config("rendehr-demo/config/ehr_config.json")
+```
+
+## Download the demo
+
+The MIMIC-IV demo has 100 patients and is open to everyone. `download_source()`
+fetches it into the project and checks every file against the release
+checksums:
+
+```{r download, results = "hide"}
+download_source("mimic_iv_demo")
+```
+
+```{r download-check}
+list.files("rendehr-demo/data/source_data/mimic_iv_demo/icu")
+```
+
+## Build a cohort
+
+rendehR defines the cohort first and only then imports the rows that belong to
+it. Two cohorts come with the package:
+
+```{r example-cohorts}
+list_example_cohorts()[, c("name", "kind", "description")]
+```
+
+`run_one_source()` takes one source through every stage: it imports the
+Sepsis-3 cohort to Parquet, loads it into PostgreSQL, builds the visit windows
+and the cohort table, extracts the clinical concepts and writes the harmonized
+tables.
+
+```{r run, results = "hide"}
+stages <- run_one_source(
+  "mimic_iv_demo",
+  cohort_selection = cohort_selection_options(cohort = "sepsis3")
+)
+```
+
+```{r run-result}
+stages[, c("stage", "status", "seconds")]
+```
+
+To combine sources, and to get the analysis tables, merge them into one schema.
+With a single source this still gives the tables everything else reads:
+
+```{r merge, results = "hide"}
+merge_sources("mimic_iv_demo")
+```
+
+## Read the data
+
+`ehr_connect()` keeps the connection details for the functions that read data;
+with an active project it needs no arguments.
+
+```{r connect}
+ehr_connect()
+cohort <- load_merged_cohort_info("rendehr")
+nrow(cohort)
+length(unique(cohort$src_patient_id))
+```
+
+The demo has 62 ICU stays that meet Sepsis-3 in 47 patients; the cohort table
+holds their hospital admissions. One row per admission, with demographics and
+outcomes:
+
+```{r flat}
+flat <- load_merged_flat("rendehr")
+flat[1:5, c("src_patient_id", "age", "sex", "admission_type", "hospital_los", "hospital_mortality")]
+```
+
+Measurements come as a long table of `concept_name`, time and value, or reshaped
+wide into time bins. Here, the extremes of the first 24 hours after admission:
+
+```{r wide}
+day1 <- load_merged_ts_wide(
+  "rendehr",
+  spec    = list(heart_rate = c("min", "max"), lactate = "max", spo2 = "min"),
+  bin_min = 24 * 60,
+  window  = c(0, 0)
+)
+head(day1)
+```
+
+```{r lactate-plot, fig.alt = "Boxplot of the highest lactate in the first 24 hours, by in-hospital death, in the MIMIC-IV demo Sepsis-3 cohort."}
+library(ggplot2)
+d <- merge(day1, flat[, c("ehr_id", "hospital_mortality")], by = "ehr_id")
+d <- d[is.finite(d$lactate), ]
+ggplot(d, aes(factor(hospital_mortality, labels = c("Survived", "Died")), lactate)) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.15, alpha = 0.6) +
+  labs(x = NULL, y = "Highest lactate, first 24 h (mmol/L)") +
+  theme_minimal()
+```
+
+## Explore it
+
+The cohort explorer opens the same tables in the browser: cohort overview,
+filters and a characteristics table, outcomes and survival, one patient's
+timeline, the concept inventory.
+
+```r
+run_explorer("rendehr")
+```
+
+See `vignette("explorer", package = "rendehR")` for a tour.
+
+## Where to go next
+
+- `vignette("projects")`: the project folder, configuration, credentials and raw data
+- `vignette("cohorts")`: defining your own cohort (ICD lists, IDs, SQL) and import scope
+- `vignette("pipeline")`: the stages one by one, several sources, DuckDB, checks
+- `vignette("harmonized-data")`: reading, reshaping and plotting the harmonized tables
+- `vignette("concepts")`: the clinical concepts, their provenance, and adding your own

@@ -1,0 +1,65 @@
+Package: rendehR
+Title: Multi-Source EHR Harmonization Pipeline
+Version: 1.0.0
+Authors@R: c(
+    person("Marzieh", "Mussavi Rizi", role = "aut"),
+    person("Vladyslav", "Shein", email = "vshein@uwaterloo.ca", role = "aut"),
+    person("Abel", "Torres-Espin", email = "abel.torresespin@uwaterloo.ca",
+           role = c("aut", "cre"))
+  )
+Description: Downloads, imports, cohort-filters, and harmonizes ICU EHR data
+    from MIMIC-III, MIMIC-IV, and eICU. Domain-specific cohort definitions
+    and enrichment logic are user-supplied; spinal cord injury (SCI) research
+    is included as a reference implementation.
+License: GPL-3
+Copyright: See file inst/COPYRIGHTS
+URL: https://ate-driven-lab.github.io/rendehR/,
+    https://github.com/ATE-DRIVEN-lab/rendehR
+BugReports: https://github.com/ATE-DRIVEN-lab/rendehR/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 4.1.0)
+Imports:
+    DBI,
+    RPostgres,
+    arrow,
+    comorbidity,
+    curl,
+    data.table,
+    dbplyr,
+    dplyr,
+    duckdb,
+    glue,
+    icdpicr,
+    icdpicr2 (>= 2.1.0),
+    jsonlite,
+    magrittr,
+    openssl,
+    purrr,
+    readr,
+    stats,
+    stringr,
+    tibble,
+    tidyr,
+    tools,
+    utils
+Suggests:
+    bsicons,
+    bslib,
+    DT,
+    ggplot2,
+    knitr,
+    methods,
+    plotly,
+    ricu,
+    rmarkdown,
+    shiny,
+    shinycssloaders,
+    shinyWidgets,
+    survival,
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+Config/roxygen2/version: 8.1.0

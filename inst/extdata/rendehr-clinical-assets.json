@@ -1,0 +1,324 @@
+{
+  "format_version": 1,
+  "assets": [
+    {
+      "id": "sci_icd_classification",
+      "filename": "scid_icds_rendehr.rds",
+      "source": "rendehR SCI ICD dictionary, the default SCI ICD list",
+      "edition": "2.2.3",
+      "citation": "Mussavi Rizi M, Shein V, Torres-Espin A. rendehR: Multi-Source EHR Harmonization Pipeline. R package.",
+      "license": "GPL-3 (part of rendehR)",
+      "sha256": "a639d61fb488626b55f3080ed6bed115a9d1747c6d2ebb3f03e46185b9ba6559",
+      "generation_method": "rendehR SCI ICD dictionary v2.2.3 with decimal codes; same rows and values as scid_icds_rendehr.csv",
+      "required_columns": [
+        "icd_code",
+        "icd_version",
+        "long_title",
+        "is_sci",
+        "is_tr",
+        "nontrauma_l1",
+        "nontrauma_l2",
+        "anatomical_region",
+        "specific_level"
+      ],
+      "required_nonmissing": [
+        "icd_code",
+        "icd_version"
+      ],
+      "key": [
+        "icd_code",
+        "icd_version"
+      ],
+      "key_unique": true,
+      "multiplicity": "intentional rows are preserved; consumers select code/version mappings",
+      "domains": {
+        "icd_version": [
+          "9",
+          "10"
+        ],
+        "is_sci": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "999"
+        ],
+        "is_tr": [
+          "0",
+          "1",
+          "2"
+        ],
+        "anatomical_region": [
+          "cervical",
+          "cervical_thoracic",
+          "coccygeal",
+          "coccygeal_sacral",
+          "lumbar",
+          "lumbar_sacral",
+          "lumbar_sacral_thoracic",
+          "lumbar_thoracic",
+          "multiple_regions_unspecified",
+          "sacral",
+          "thoracic",
+          "unspecified"
+        ]
+      },
+      "limitations": "Curated for spinal cord injury research; not a validated gold standard.",
+      "verification_status": "curated"
+    },
+    {
+      "id": "sci_icd_classification_csv",
+      "filename": "scid_icds_rendehr.csv",
+      "source": "rendehR SCI ICD dictionary (CSV copy of scid_icds_rendehr.rds)",
+      "edition": "2.2.3",
+      "citation": "Mussavi Rizi M, Shein V, Torres-Espin A. rendehR: Multi-Source EHR Harmonization Pipeline. R package.",
+      "license": "GPL-3 (part of rendehR)",
+      "sha256": "4f683a9e70094c4ff4745d6e57adf9fc451afbd8212e2e4a63fd62b34777c7cc",
+      "generation_method": "rendehR SCI ICD dictionary v2.2.3 with decimal codes; same rows and values as scid_icds_rendehr.rds",
+      "required_columns": [
+        "icd_code",
+        "icd_version",
+        "long_title",
+        "is_sci",
+        "is_tr",
+        "nontrauma_l1",
+        "nontrauma_l2",
+        "anatomical_region",
+        "specific_level"
+      ],
+      "required_nonmissing": [
+        "icd_code",
+        "icd_version"
+      ],
+      "key": [
+        "icd_code",
+        "icd_version"
+      ],
+      "key_unique": true,
+      "multiplicity": "intentional rows are preserved; consumers select code/version mappings",
+      "domains": {
+        "icd_version": [
+          "9",
+          "10"
+        ],
+        "is_sci": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "999"
+        ],
+        "is_tr": [
+          "0",
+          "1",
+          "2"
+        ],
+        "anatomical_region": [
+          "cervical",
+          "cervical_thoracic",
+          "coccygeal",
+          "coccygeal_sacral",
+          "lumbar",
+          "lumbar_sacral",
+          "lumbar_sacral_thoracic",
+          "lumbar_thoracic",
+          "multiple_regions_unspecified",
+          "sacral",
+          "thoracic",
+          "unspecified"
+        ]
+      },
+      "limitations": "Curated for spinal cord injury research; not a validated gold standard.",
+      "verification_status": "curated"
+    },
+    {
+      "id": "injury_cause_classification",
+      "filename": "injury_cause_icds_rendehr.csv",
+      "source": "rendehR injury cause classification",
+      "edition": "rendehR 1.0.0",
+      "citation": "Mussavi Rizi M, Shein V, Torres-Espin A. rendehR: Multi-Source EHR Harmonization Pipeline. R package.",
+      "license": "GPL-3 (part of rendehR)",
+      "sha256": "c39637b29c2c6b49a42075a315dfca115720916af0d9e149cb53666e1b70d005",
+      "generation_method": "ICD-9 and ICD-10 external-cause codes grouped into injury cause categories; ICD-9 transport codes E800-E848 are Transport",
+      "required_columns": [
+        "icd_code",
+        "icd_version",
+        "long_title",
+        "new_inj_category"
+      ],
+      "required_nonmissing": [
+        "icd_code",
+        "icd_version"
+      ],
+      "key": [
+        "icd_code",
+        "icd_version",
+        "new_inj_category"
+      ],
+      "key_unique": true,
+      "multiplicity": "multiple classifications per code/version may be intentional and are preserved",
+      "domains": {
+        "icd_version": [
+          "9",
+          "10"
+        ]
+      },
+      "limitations": "Curated for injury research; not a validated gold standard.",
+      "verification_status": "curated"
+    },
+    {
+      "id": "procedure_classification",
+      "filename": "procedure_classification_icds_rendehr.csv",
+      "source": "rendehR procedure classification",
+      "edition": "rendehR 1.0.0",
+      "citation": "Mussavi Rizi M, Shein V, Torres-Espin A. rendehR: Multi-Source EHR Harmonization Pipeline. R package.",
+      "license": "GPL-3 (part of rendehR)",
+      "sha256": "c7d88fbdfc6e58267341e2d760731fe7680256e2d8e8f3c1a75c0955cf2d7b16",
+      "generation_method": "ICD-9 and ICD-10-PCS procedure codes classified by treatment category and body system",
+      "required_columns": [
+        "icd_code",
+        "icd_version",
+        "icd_title",
+        "treatment_category",
+        "body_system_section"
+      ],
+      "required_nonmissing": [
+        "icd_version"
+      ],
+      "known_missing_counts": {
+        "icd_code": 173
+      },
+      "key": [
+        "icd_code",
+        "icd_version",
+        "treatment_category",
+        "body_system_section"
+      ],
+      "key_unique": false,
+      "multiplicity": "multiple procedure classifications per code and nine exact duplicate rows are kept",
+      "domains": {
+        "icd_version": [
+          "9",
+          "10"
+        ],
+        "treatment_category": [
+          "Nonoperative",
+          "Operative"
+        ]
+      },
+      "limitations": "173 rows have no icd_code and are left out of the lookup at run time. A procedure missing from the list is not classified as nonoperative.",
+      "verification_status": "curated"
+    },
+    {
+      "id": "diagnosis_dictionary",
+      "filename": "d_icd_diagnoses.csv",
+      "source": "CMS ICD-9-CM and ICD-10-CM code description files (https://www.cms.gov/medicare/coding-billing/icd-10-codes)",
+      "edition": "ICD-9-CM v23-v32 and ICD-10-CM FY2016-FY2025, union; title from the newest release with the code",
+      "citation": "Centers for Medicare & Medicaid Services, ICD-9-CM and ICD-10-CM code descriptions",
+      "license": "public domain (US government work)",
+      "sha256": "da0f91d4b32dfe527fc66b9a2f88cf5d7dfd467064d324bea229a85d22b03ab5",
+      "generation_method": "data-raw/d_icd_diagnoses.R",
+      "required_columns": [
+        "icd_code",
+        "icd_version",
+        "long_title"
+      ],
+      "required_nonmissing": [
+        "icd_code",
+        "icd_version"
+      ],
+      "key": [
+        "icd_code",
+        "icd_version",
+        "long_title"
+      ],
+      "key_unique": true,
+      "multiplicity": "both ICD versions and official cross-version code collisions are preserved",
+      "domains": {
+        "icd_version": [
+          "9",
+          "10"
+        ]
+      },
+      "limitations": "Codes retired before ICD-9-CM v28 carry the official short title. Not a gold standard for clinical meaning.",
+      "verification_status": "rebuilt_from_public_source"
+    },
+    {
+      "id": "procedure_dictionary",
+      "filename": "d_icd_procedures.csv",
+      "source": "MIMIC-IV Clinical Database Demo 2.2, hosp/d_icd_procedures (https://physionet.org/content/mimic-iv-demo/2.2/)",
+      "edition": "MIMIC-IV Demo 2.2",
+      "citation": "Johnson A, et al. MIMIC-IV Clinical Database Demo (version 2.2). PhysioNet. https://doi.org/10.13026/dp1f-ex47",
+      "license": "ODbL v1.0",
+      "sha256": "ce5e256bc06ff8e2071e190799fe3bb99bd58be4d66d6b81276d61bfe9f65688",
+      "generation_method": "copied from the MIMIC-IV Demo 2.2 table hosp/d_icd_procedures",
+      "required_columns": [
+        "icd_code",
+        "icd_version",
+        "long_title"
+      ],
+      "required_nonmissing": [
+        "icd_code",
+        "icd_version"
+      ],
+      "key": [
+        "icd_code",
+        "icd_version",
+        "long_title"
+      ],
+      "key_unique": true,
+      "multiplicity": "versioned dictionary meanings are preserved",
+      "domains": {
+        "icd_version": [
+          "9",
+          "10"
+        ]
+      },
+      "limitations": "The MIMIC-IV Demo 2.2 edition of the dictionary.",
+      "verification_status": "copied_from_public_source"
+    },
+    {
+      "id": "eicu_icd_version_adjudication",
+      "filename": "eicu_icd_version_adjudication_rendehr.csv",
+      "source": "rendehR",
+      "edition": "rendehR 1.0.0",
+      "citation": "Mussavi Rizi M, Shein V, Torres-Espin A. rendehR: Multi-Source EHR Harmonization Pipeline. R package.",
+      "license": "GPL-3 (part of rendehR)",
+      "sha256": "a10462b73136b0ff94cfacc8767ec749c8ee8c96724c6add811fcd5b43b17b98",
+      "generation_method": "one row per eICU ICD code whose version (ICD-9 or ICD-10) cannot be told from the code",
+      "required_columns": [
+        "raw_code",
+        "compact_code",
+        "selected_version",
+        "review_status",
+        "rationale"
+      ],
+      "required_nonmissing": [
+        "raw_code",
+        "compact_code",
+        "review_status",
+        "rationale"
+      ],
+      "key": [
+        "raw_code",
+        "compact_code"
+      ],
+      "key_unique": true,
+      "multiplicity": "one reviewed disposition per raw/compact collision key",
+      "domains": {
+        "selected_version": [
+          "9",
+          "10"
+        ],
+        "review_status": [
+          "approved",
+          "ambiguous",
+          "rejected",
+          "pending"
+        ]
+      },
+      "limitations": "V42.7/V427 stays ambiguous and is not scored.",
+      "verification_status": "curated"
+    }
+  ]
+}
