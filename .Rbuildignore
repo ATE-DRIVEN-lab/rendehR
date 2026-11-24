@@ -1,0 +1,14 @@
+^\.git$
+^\.gitattributes$
+^docs$
+^validation$
+^_pkgdown\.yml$
+^pkgdown$
+^LICENSE\.md$
+^graphify-out$
+^vignettes/.*\.Rmd\.orig$
+^vignettes/precompute(-setup)?\.R$
+^\.github$
+^CITATION\.cff$
+^vignettes/articles$
+^data-raw$

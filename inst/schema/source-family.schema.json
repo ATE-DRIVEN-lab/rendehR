@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rendehr.local/schema/source-family.schema.json",
+  "title": "rendehR source-family definition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "name",
+    "select_id_cols",
+    "time_origin",
+    "id_cols",
+    "cohort_key"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "name": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "id_prefixes": {
+      "$ref": "#/$defs/nonEmptyStrings"
+    },
+    "source_names": {
+      "$ref": "#/$defs/nonEmptyStrings"
+    },
+    "select_id_cols": {
+      "$ref": "#/$defs/nonEmptyStrings"
+    },
+    "time_origin": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "icu_id_type": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "time_diff": {
+      "enum": ["timestamp_minutes", "offset_minutes"]
+    },
+    "id_cols": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default"],
+      "properties": {
+        "default": {
+          "$ref": "#/$defs/nonEmptyStrings"
+        },
+        "icu": {
+          "$ref": "#/$defs/nonEmptyStrings"
+        },
+        "tables_with_icu": {
+          "$ref": "#/$defs/nonEmptyStrings"
+        }
+      }
+    },
+    "cohort_key": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "cohort_seed_tables": {
+      "$ref": "#/$defs/nonEmptyStrings"
+    },
+    "cohort_filter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["diag_table", "code_col", "key"],
+      "properties": {
+        "diag_table": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "code_col": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "key": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "split_commas": {
+          "type": "boolean"
+        },
+        "strip_dots": {
+          "type": "boolean"
+        }
+      }
+    },
+    "variants": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "demo": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "row_limit": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    "release_metadata": {
+      "type": "object"
+    },
+    "acquisition": {
+      "type": "object",
+      "description": "Reserved unified acquisition section."
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "nonEmptyStrings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/nonEmptyString"
+      }
+    }
+  }
+}

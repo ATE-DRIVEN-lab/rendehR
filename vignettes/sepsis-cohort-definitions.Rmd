@@ -1,0 +1,178 @@
+---
+title: "Sepsis-3 cohorts across sources"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Sepsis-3 cohorts across sources}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+Sepsis-3 is a clinical definition, not an ICD code. rendehR ships one
+implementation per source family so the same rule runs on MIMIC-III, MIMIC-IV
+and eICU, with the source-specific tables and item IDs each database needs.
+
+## The definition
+
+The Third International Consensus defines sepsis as suspected infection
+co-occurring with an acute increase in organ dysfunction, measured by the SOFA
+score. There is no gold-standard way to find it in ICU records: published
+studies differ in how they detect suspected infection, how they measure the
+SOFA increase, which time window they use and what they count. rendehR ships a
+default and keeps the alternatives as options, so the choice is explicit.
+
+**Default (`definition = "delta"`).** It follows the YAIB/ricu
+operationalisation:
+
+1. **Suspected infection.** On MIMIC, an antibiotic paired with a body-fluid
+   culture: if the culture came first, the antibiotic must follow within 72
+   hours; if the antibiotic came first, the culture must follow within 24 hours.
+   The earlier event is the suspicion time. eICU has culture data for under 3%
+   of stays, so there the antibiotic alone is the suspicion (as in ricu and
+   YAIB). In both, the antibiotic must belong to a course lasting at least 72
+   hours (administrations less than 24 hours apart form one course), or a course
+   cut short by death.
+2. **SOFA rise.** The hourly 24-hour SOFA minus the lowest SOFA of the stay so
+   far must reach 2 points. Organ dysfunction present from ICU admission (an
+   injury, sedation, a vasopressor started on arrival) is the baseline, not
+   sepsis. This matters for trauma and spinal cord injury patients.
+3. **Combination.** Keep ICU stays where such a rise falls within −48 to +24
+   hours of the suspicion time. Adults only.
+
+**`definition = "absolute"`.** The earlier rendehR rule: any antibiotic (MIMIC-III
+and eICU) or antibiotic-culture pair (MIMIC-IV), and an absolute SOFA of at
+least 2 from an assumed baseline of 0. It is the rule of the AI Clinician code
+(`microsoft/mimic_sepsis`) and MIMIC-Sepsis, and it selects many more stays.
+
+**`bundle = "trauma_sepsis3"`** (MIMIC-III and MIMIC-IV). Hospital-acquired
+sepsis in trauma admissions, after
+[SepsisOnset_TraumaCohort](https://github.com/ML4UWHealth/SepsisOnset_TraumaCohort):
+a blood culture at least 72 hours after admission with a new intravenous
+antibiotic course of at least 4 days starting within 2 days of it, and a rise
+of at least 2 points of a SOFA without its GCS and urine-output parts within 3
+days of the culture. It is decided per hospital admission; eICU lacks the
+culture data it needs.
+
+The definitions were compared with these published operationalisations:
+YAIB (used by [Tranchellini et al., npj Digit Med 2026](https://www.nature.com/articles/s41746-026-02364-4)
+and its code), [microsoft/mimic_sepsis](https://github.com/microsoft/mimic_sepsis),
+[MIMIC-Sepsis](https://arxiv.org/abs/2510.24500),
+[SepsisOnset_TraumaCohort](https://github.com/ML4UWHealth/SepsisOnset_TraumaCohort)
+and [Zhang et al., npj Digit Med 2026](https://www.nature.com/articles/s41746-026-02565-x).
+
+## Using the helper
+
+
+``` r
+ehr_init_project(
+  "mimic_iv_demo", base_dir = "sepsis-demo",
+  raw_data_root = normalizePath("rendehr-demo/data/source_data")
+)
+```
+
+
+
+`build_sepsis_cohort()` runs the packaged SQL and returns the selected
+identifiers. With `import = FALSE` it writes only a CSV, so you can inspect the
+cohort before committing it to a project:
+
+
+``` r
+out <- file.path(docs_root, "sepsis-demo/mimic_iv_demo_sepsis3.csv")
+build_sepsis_cohort(
+  "mimic_iv_demo", bundle = "sepsis3",
+  import = FALSE, out_csv = out, show_progress = FALSE
+)
+ids <- read.csv(out)
+nrow(ids)
+#> [1] 39
+length(unique(ids$subject_id))
+#> [1] 31
+head(ids)
+#>   subject_id  stay_id
+#> 1   10007818 32359580
+#> 2   10004720 35009126
+#> 3   10002428 38875437
+#> 4   10037975 39061571
+#> 5   10039708 33281088
+#> 6   10020740 31077365
+```
+
+The result carries the ICU stay and its patient (`stay_id`, `subject_id`),
+matching the unit the definition selects. The same call with `import = TRUE` (the default) imports
+the cohort and its context into the project; `import_scope = "hospital"` is the
+default because a sepsis stay is usually analysed with its admission.
+
+## Variants
+
+`definition` chooses the rule; `bundle` chooses which qualifying stays to keep:
+
+| Bundle | Selection |
+|:--|:--|
+| `sepsis3` | Every qualifying ICU stay |
+| `first_sepsis3` | The patient's first-ever ICU stay, if it qualifies |
+| `sepsis3_admission` | Qualifying suspicion within ±1 day of ICU admission |
+| `first_sepsis3_admission` | Both restrictions |
+| `trauma_sepsis3` | The trauma rule above (MIMIC only; `definition` does not apply) |
+
+`first_sepsis3` is the patient's first ICU stay, not the first septic stay, and
+the eICU ordering of stays across hospitalisations is approximate.
+
+## Counts on the demos
+
+ICU stays / hospital admissions / patients, where the source has an admission
+identifier:
+
+| Definition | Bundle | MIMIC-IV demo | MIMIC-III demo | eICU demo |
+|:--|:--|--:|--:|--:|
+| `delta` | `sepsis3` | 39 / — / 31 | 59 / 57 / 44 | 188 / 181 / 167 |
+| `delta` | `first_sepsis3` | 29 / — / 29 | 42 / 42 / 42 | 146 / 146 / 146 |
+| `delta` | `sepsis3_admission` | 30 / — / 25 | 55 / 54 / 41 | 132 / 130 / 119 |
+| `delta` | `first_sepsis3_admission` | 22 / — / 22 | 39 / 39 / 39 | 104 / 104 / 104 |
+| `absolute` | `sepsis3` | 62 / — / 47 | 95 / 92 / 70 | 448 / 429 / 389 |
+| `absolute` | `first_sepsis3` | 40 / — / 40 | 66 / 66 / 66 | 353 / 353 / 353 |
+| `absolute` | `sepsis3_admission` | 59 / — / 45 | 88 / 86 / 66 | 347 / 341 / 311 |
+| `absolute` | `first_sepsis3_admission` | 39 / — / 39 | 61 / 61 / 61 | 283 / 283 / 283 |
+| — | `trauma_sepsis3` | 21 / — / 16 | 16 / 13 / 13 | — |
+
+The eICU suspicion-only cohort (no SOFA confirmation) is larger: 582 ICU stays
+in 544 admissions and 489 patients. On MIMIC-III the suspicion-only cohort has
+28 stays, and the modified suspicion implementation 109 stays in 102 admissions
+and 78 patients.
+
+## Counts on the full databases
+
+Run on the complete PhysioNet databases (MIMIC-III 1.4: 61,532 ICU stays;
+MIMIC-IV 3.1: 94,458; eICU 2.0: 200,859). ICU stays / patients:
+
+| Definition | Bundle | MIMIC-IV | MIMIC-III | eICU |
+|:--|:--|--:|--:|--:|
+| `delta` (default) | `sepsis3` | 25,090 / 20,456 | 18,953 / 15,015 | 19,235 / 17,130 |
+| `delta` | `first_sepsis3_admission` | 13,622 / 13,622 | 10,202 / 10,202 | 10,061 / 10,061 |
+| `absolute` | `sepsis3` | 41,295 / 31,910 | 34,460 / 27,113 | 47,035 / 39,368 |
+| — | `trauma_sepsis3` | 11,568 / 7,540 | 5,490 / 3,958 | — |
+
+The SOFA-rise default selects 27% of MIMIC-IV, 31% of MIMIC-III and 10% of
+eICU ICU stays, against 44%, 56% and 23% for the absolute rule. Stricter
+studies report fewer: YAIB-based work, which also drops onsets in the first 6
+hours and caps stays at 7 days, finds about 5% (Tranchellini et al. 2026).
+`trauma_sepsis3` counts every ICU stay of a qualifying admission and applies to
+all admissions, not only trauma ones; restrict it to your own trauma or SCI
+cohort.
+
+## A second implementation in the concept layer
+
+The `ehr` concept layer also contains the MIT-LCP `sepsis3` SQL, adapted so it
+can read rendehR's harmonized tables. It is a concept, not a cohort: use it to
+compare the packaged cohort with the upstream definition, or to study its
+intermediate tables (SOFA, suspicion). For cohort selection, use
+`build_sepsis_cohort()`; for the clinical concepts behind it, use
+`run_concepts(layers = "ehr")`.
+
+## Related articles
+
+- `vignette("cohorts")`: the general selection interface this helper wraps
+- `vignette("concepts")`: concept layers, including the `ehr` layer
+- `vignette("guided-setup-assistant")`: generating a project script for a
+  sepsis cohort without writing the calls by hand

@@ -1,0 +1,70 @@
+---
+title: "Concept dictionary"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+cfg_file <- function(f) system.file("extdata", f, package = "rendehR", mustWork = TRUE)
+read_cfg <- function(f) utils::read.csv(cfg_file(f), stringsAsFactors = FALSE, na.strings = c("", "NA"))
+src_label <- c(mimic_iii = "MIMIC-III", mimic_iv = "MIMIC-IV", eicu = "eICU-CRD")
+# One row per concept: where it comes from in each source, unit, plausible range.
+by_concept <- function(cfg, fields) {
+  cfg$source_label <- src_label[cfg$source]
+  rows <- lapply(split(cfg, cfg$concept_name), function(d) {
+    first <- function(col) { v <- stats::na.omit(d[[col]]); if (length(v)) as.character(v[1]) else "" }
+    has <- function(s) if (s %in% d$source) "✓" else ""
+    out <- data.frame(Concept = d$concept_name[1], Category = first("category"), Unit = first("unit"),
+                      check.names = FALSE, stringsAsFactors = FALSE)
+    if ("min_value" %in% fields) out$Range <- paste0(first("min_value"), "–", first("max_value"))
+    for (s in names(src_label)) out[[src_label[[s]]]] <- has(s)
+    out$Tables <- paste(sort(unique(d$table_name)), collapse = ", ")
+    out
+  })
+  out <- do.call(rbind, rows)
+  if ("Range" %in% names(out)) out$Range[out$Range == "–"] <- ""
+  out[order(out$Category, out$Concept), ]
+}
+dt <- function(x) DT::datatable(x, rownames = FALSE, filter = "top", class = "compact stripe", width = "100%",
+                                options = list(pageLength = 25, scrollX = TRUE, dom = "ftip"))
+ts  <- read_cfg("rendehr_concepts_config.csv")
+dur <- read_cfg("rendehr_duration_concepts_config.csv")
+x <- by_concept(ts, c("min_value", "max_value"))
+y <- by_concept(dur, character())
+```
+
+The concepts rendehR extracts from each source, generated from the
+configuration files shipped with the installed package
+(`rendehr_concepts_config.csv` for time series,
+`rendehr_duration_concepts_config.csv` for medication exposures). Flat
+admission-level variables (age, sex, outcomes, length of stay, ...) come from SQL
+and are listed in `vignette("harmonized-data")`.
+
+A tick means the source has at least one configuration row for the concept.
+*Range* is the plausible range used by `clean_by_range()` and by
+`clean = "range"` in the wide loaders; the pipeline itself keeps every value.
+To add or override a concept for a project, see `vignette("concepts")`.
+
+## Time-series concepts
+
+`r nrow(x)` concepts from `r nrow(ts)` configuration rows.
+
+```{r ts}
+dt(x)
+```
+
+## Medication exposures
+
+`r nrow(y)` exposure concepts from `r nrow(dur)` configuration rows.
+
+```{r dur}
+dt(y)
+```
+
+## Reading the configuration in R
+
+```r
+cfg <- read.csv(system.file("extdata", "rendehr_concepts_config.csv", package = "rendehR"))
+subset(cfg, concept_name == "lactate",
+       c(source, table_name, match_value, unit, min_value, max_value, conversion))
+validate_concept_config(cfg)   # the checks run_concepts() applies to every row
+```

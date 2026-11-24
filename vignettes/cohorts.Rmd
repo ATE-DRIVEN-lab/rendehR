@@ -1,0 +1,276 @@
+---
+title: "Cohorts: selection and materialization"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Cohorts: selection and materialization}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+A cohort decides which patients, admissions or ICU stays enter the study. In
+rendehR the decision comes first: the selection runs in DuckDB over the raw
+files, and only the selected rows, together with the context they need, are
+written to Parquet or DuckDB. Nothing is imported before the cohort is known.
+
+
+``` r
+ehr_init_project(
+  "mimic_iv_demo", base_dir = "cohorts-demo",
+  raw_data_root = normalizePath("rendehr-demo/data/source_data")
+)
+```
+
+
+
+The examples below use the MIMIC-IV demo downloaded in
+`vignette("rendehR")`; `raw_data_root` points at that copy, so nothing is
+downloaded twice.
+
+## Where the cohort can come from
+
+Any cohort request is one of six routes, and at most one may be given:
+
+| You have | Pass |
+|:--|:--|
+| A list of identifiers | `direct_ids_path` |
+| SQL that returns identifiers | `cohort_sql` (plus optional `setup_sql`) |
+| An R function that returns identifiers | `cohort_fn` |
+| A table of ICD codes | `icd_filter_path` |
+| A definition bundled with the package | `cohort` |
+| The whole source | `no_filter = TRUE` |
+
+With none of them, the project's `cohort.profile` and `cohort.icd_filter_path`
+decide. The profile defaults to `"generic"`; under `"scid"`, comorbidities and
+injury severity run unless switched off.
+
+
+``` r
+list_example_cohorts()[, c("name", "kind", "description")]
+#>      name kind
+#> 1    scid  icd
+#> 2 sepsis3  sql
+#>                                                                 description
+#> 1 Spinal cord injury - bundled ICD-9/10 list (the package reference cohort)
+#> 2  Sepsis-3 (Singer 2016): SOFA >= 2 + suspicion of infection, per ICU stay
+```
+
+`scid` is an ICD-code cohort; `sepsis3` runs the packaged Sepsis-3 SQL. The
+SQL definitions and their variants are described in
+`vignette("sepsis-cohort-definitions")`.
+
+## Look before you import
+
+`select_cohort_ids()` runs the selection and returns a plan without writing
+anything. Printing the plan reports the route, the key, the scope and the
+counts; identifiers never appear on screen.
+
+
+``` r
+scid <- select_cohort_ids("mimic_iv_demo", cohort = "scid")
+sepsis <- select_cohort_ids("mimic_iv_demo", cohort = "sepsis3")
+no_filter <- select_cohort_ids("mimic_iv_demo", no_filter = TRUE)
+scid
+#> rendehR cohort selection: mimic_iv_demo
+#> Route    : named_icd
+#> Keys     : selection hadm_id, evidence hadm_id
+#> Scope    : requested -, effective subject_id
+#> Counts   : 15 requested, 15 matched, 0 unmatched
+#> Identifiers are in $values (not printed).
+```
+
+The plan records `selection_key` and `selection_grain` (what you supplied),
+`evidence_key` and `evidence_grain` (what the definition matched), the requested
+and effective scope, and `requested_count`, `matched_count` and
+`unmatched_count`. The normalised identifiers are in `plan$values`, for code
+that needs them, not for printing.
+
+## Identifiers, SQL, and ICD lists
+
+A direct identifier file may be CSV, CSV.GZ, Parquet or RDS. Identifiers are
+read as text, trimmed, deduplicated and matched against the source hierarchy.
+A selection fails when the file is empty, malformed or wholly unmatched; a
+partly unmatched selection fails too unless `allow_unmatched_ids = TRUE`, and
+even then at least one identifier must match.
+
+
+``` r
+ids <- file.path(docs_root, "demo-patients.csv")
+write.csv(data.frame(subject_id = c(10002428, 10000032)), ids, row.names = FALSE)
+by_id <- select_cohort_ids(
+  "mimic_iv_demo", direct_ids_path = ids, key = "subject_id"
+)
+by_id
+#> rendehR cohort selection: mimic_iv_demo
+#> Route    : direct_ids
+#> Keys     : selection subject_id, evidence subject_id
+#> Scope    : requested -, effective subject_id
+#> Counts   : 2 requested, 2 matched, 0 unmatched
+#> Identifiers are in $values (not printed).
+```
+
+SQL is an ordinary query over the source's raw tables. Use `setup_sql` for any
+temporary objects the final query needs.
+
+
+``` r
+by_sql <- select_cohort_ids(
+  "mimic_iv_demo",
+  cohort_sql = "SELECT subject_id FROM patients WHERE gender = 'F'",
+  key = "subject_id"
+)
+by_sql
+#> rendehR cohort selection: mimic_iv_demo
+#> Route    : sql
+#> Keys     : selection subject_id, evidence subject_id
+#> Scope    : requested -, effective subject_id
+#> Counts   : 43 requested, 43 matched, 0 unmatched
+#> Identifiers are in $values (not printed).
+```
+
+An ICD list is a CSV or RDS with `icd_code` and `icd_version` (9 or 10).
+`icd_version` is required for MIMIC-IV and eICU and optional for MIMIC-III,
+where ICD-9 is assumed; a code matches only in the version it names. The
+bundled `scid` cohort is exactly such a list.
+
+## Scope and context
+
+The selected identifier sits somewhere in the source hierarchy: a patient has
+admissions, and an admission has ICU stays. `import_scope` says how much of
+that hierarchy to keep:
+
+| Scope | Keeps |
+|:--|:--|
+| `patient` (default) | Every admission and ICU stay of a selected patient |
+| `hospital` | Every ICU stay of a selected admission, plus the admission |
+| `icu` | Only the selected ICU stay |
+
+An ICD cohort on MIMIC selects hospital admissions, so `icu` cannot narrow it
+further; eICU selects ICU stays and accepts all three scopes.
+
+The materialized hierarchy records the decision in three logical columns:
+`definition_filter_index` marks the unit the original definition selected,
+`scope_index` marks the units kept under the effective scope, and
+`patient_context_index` marks everything belonging to the reached patients.
+Selecting ICU stay `I1` of patient `P1` with patient scope keeps all of P1's
+rows, marks `I1` in `definition_filter_index`, and marks all of them in
+`scope_index`. The same selection with ICU scope keeps the same hierarchy but
+marks only `I1` in `scope_index`.
+
+The visit windows keep the whole patient context so concepts can look back
+across readmissions. Their `in_scope` column is the effective scope, and the
+cohort tables carry `cohort_index`, the active membership flag downstream
+stages read. Rows with `in_scope = FALSE` are context only: their events were
+not imported.
+
+## Materializing
+
+Two destinations implement the same selection, hierarchy and table rules.
+Choose Parquet when PostgreSQL is the eventual home:
+
+
+``` r
+import_cohort_general(
+  "mimic_iv_demo",
+  cohort = "scid",
+  tables = c("patients", "admissions", "icustays"),
+  show_progress = FALSE
+)
+```
+
+The import writes the filtered tables and the window and hierarchy tables next
+to the project:
+
+
+``` r
+list.files("cohorts-demo/data/cohorts_data/mimic_iv_demo_parquet")
+#>  [1] "admission_windows.parquet"        "admissions.parquet"              
+#>  [3] "cohort_hierarchy.parquet"         "cohort_icd_evidence.parquet"     
+#>  [5] "cohort_manifest.json"             "cohort_meta.parquet"             
+#>  [7] "cohort_projection_report.parquet" "cohort_table_report.parquet"     
+#>  [9] "d_scid_icds.parquet"              "icu_windows.parquet"             
+#> [11] "icustays.parquet"                 "patients.parquet"                
+#> [13] "visit_windows.parquet"
+```
+
+Choose a persistent DuckDB file when DuckDB is the destination:
+
+
+``` r
+materialize_cohort_duckdb(
+  "mimic_iv_demo",
+  db_path = "cohorts-demo/data/duckdb/scid.duckdb",
+  cohort = "scid",
+  tables = c("patients", "admissions", "icustays"),
+  show_progress = FALSE
+)
+```
+
+Both destinations build the replacement in staging, validate it, and publish it
+atomically. A failed build leaves the previous cohort untouched, and the
+package keeps no run-version history: one current cohort and one manifest.
+
+The Parquet output contains:
+
+```text
+<requested tables>.parquet
+admission_windows.parquet
+icu_windows.parquet
+visit_windows.parquet
+cohort_hierarchy.parquet
+cohort_meta.parquet
+cohort_projection_report.parquet
+cohort_table_report.parquet
+cohort_icd_evidence.parquet   # ICD routes only
+d_<name>_icds.parquet         # ICD routes only
+cohort_manifest.json
+```
+
+The DuckDB file contains the same tables plus the hierarchy views
+`cohort_patient_context`, `cohort_definition_filter` and `cohort_scope`.
+
+## Narrowing later
+
+The three indexes let later code narrow the cohort without losing the original
+meaning:
+
+```sql
+-- every row of every reached patient
+SELECT * FROM cohort_hierarchy WHERE patient_context_index;
+
+-- the units the definition selected
+SELECT * FROM cohort_hierarchy WHERE definition_filter_index;
+
+-- the units materialized under the effective scope
+SELECT * FROM cohort_hierarchy WHERE scope_index;
+```
+
+`cohort_index` on the visit windows and cohort tables is the same membership
+flag the pipeline stages read, so filtering on it keeps the cohort definition
+intact.
+
+## The Sepsis-3 helper
+
+`build_sepsis_cohort()` wraps the sepsis route when you want the packaged
+selection as a file, an import, or both. It defaults to `import_scope =
+"hospital"` and offers four variants through `bundle`:
+
+```r
+build_sepsis_cohort("mimic_iv_demo", bundle = "first_sepsis3")
+```
+
+`sepsis3` keeps every qualifying ICU stay, `first_sepsis3` restricts to the
+patient's first-ever ICU stay when it qualifies, `sepsis3_admission` requires
+the qualifying suspicion within one day of ICU admission, and
+`first_sepsis3_admission` applies both restrictions.
+`vignette("sepsis-cohort-definitions")` explains the clinical definitions and
+their counts on each source.
+
+## What to remember
+
+- One route per request; the plan is read-only until you materialize.
+- `import_scope` controls what is kept; the definition membership is separate.
+- Parquet and DuckDB use the same selection engine and the same indexes.
+- A replacement is atomic; an interrupted import never destroys the last good
+  cohort.

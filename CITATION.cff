@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+message: "If you use rendehR, please cite the preprint in preferred-citation."
+title: "rendehR: Multi-Source EHR Harmonization Pipeline"
+version: 1.0.0
+abstract: >-
+  Downloads, imports, cohort-filters, and harmonizes ICU electronic health
+  record data from MIMIC-III, MIMIC-IV, and eICU into analysis-ready flat,
+  time-series and duration tables.
+authors:
+  - family-names: Mussavi Rizi
+    given-names: Marzieh
+  - family-names: Shein
+    given-names: Vladyslav
+    email: vshein@uwaterloo.ca
+  - family-names: Torres-Espin
+    given-names: Abel
+    email: abel.torresespin@uwaterloo.ca
+license: GPL-3.0-only
+repository-code: "https://github.com/ATE-DRIVEN-lab/rendehR"
+url: "https://ate-driven-lab.github.io/rendehR/"
+keywords:
+  - electronic health records
+  - ICU
+  - MIMIC
+  - eICU
+  - cohort
+  - harmonization
+  - R
+preferred-citation:
+  type: article
+  title: "rendehR: a cohort-first, provenance-aware, agentic-ready pipeline for harmonizing multi-source electronic health records"
+  authors:
+    - family-names: Mussavi Rizi
+      given-names: Marzieh
+    - family-names: Shein
+      given-names: Vladyslav
+    - family-names: Torres-Espin
+      given-names: Abel
+  journal: medRxiv
+  year: 2026
+  doi: "10.64898/2026.11.19.26367722"
+  url: "https://doi.org/10.64898/2026.11.19.26367722"
+  notes: Preprint

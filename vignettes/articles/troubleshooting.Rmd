@@ -1,0 +1,280 @@
+---
+title: "Troubleshooting"
+---
+
+Common problems when running rendehR on MIMIC-III, MIMIC-IV, eICU and their
+demos, with the message you see, the cause and the fix. Code below is not
+evaluated.
+
+## Connections and credentials
+
+### Where credentials come from
+
+PostgreSQL settings are resolved field by field by `load_credentials()`: the
+environment variables `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` and `PGSSLMODE`
+win, then the `postgres` block of the credentials file, then the defaults
+(`localhost`, `5432`, `postgres`, `prefer`). PhysioNet uses `PHYSIONET_USER` and
+`PHYSIONET_PASS`, then the `physionet` block of the file. The file is
+`database.credentials_path` of the active project config, otherwise
+`config/config_pass.json` in the working directory. Passing `creds =` to
+`ehr_connect()` or `run_explorer()` bypasses the file; `download_source()` still
+gives `PHYSIONET_USER` and `PHYSIONET_PASS` precedence over stored values.
+
+```r
+ehr_create_credentials_template("config/config_pass.json",
+                                postgres_user = "postgres")
+ehr_use_config("config/ehr_config.json")   # also clears cached credentials
+ehr_connect()                              # or ehr_connect("rendehr", creds = load_credentials())
+```
+
+Credentials are cached for the session. After editing the file or the
+environment variables, call `ehr_use_config()` again (or restart R).
+
+### "PostgreSQL refused the password for user '...'"
+
+The stored password is wrong. In an interactive session you are asked up to
+three times; otherwise the call stops with
+"Correct it in the credentials file (postgres$password) or PGPASSWORD."
+Fix `postgres$password` in `config/config_pass.json` or set `PGPASSWORD`.
+
+### "Connection refused" or "could not connect to server"
+
+This error comes from the PostgreSQL client library and is passed through
+unchanged: the server is not running, or `host`/`port` point to the wrong
+place. Check the server (`pg_isready -h localhost -p 5432`), then the
+`postgres` block or `PGHOST`/`PGPORT`. `ehr_connect()` only stores
+credentials; the first query is where a connection error appears.
+
+rendehR does not install or start PostgreSQL. If none is installed, the
+README's [Requirements](https://ate-driven-lab.github.io/rendehR/#requirements)
+section shows how to run one on macOS, Windows, Linux or Docker.
+
+### "role \"postgres\" does not exist"
+
+The server has no login with that name. A Homebrew server on macOS creates only
+a login named after your macOS user, without a password; put that name in
+`postgres$user` (or `PGUSER`), or create a `postgres` role with
+`createuser -s postgres`.
+
+### "permission denied to create database"
+
+rendehR creates each project's database on first use, so the login needs the
+`CREATEDB` privilege. Grant it as a superuser
+(`ALTER ROLE your_user CREATEDB;`) or create the database yourself and name it
+in `database.db_name`.
+
+### Running without PostgreSQL
+
+If you do not need PostgreSQL, run the supported stages on DuckDB:
+
+```r
+run_one_source("mimic_iv_demo", engine = "duckdb")
+```
+
+### "Retired PhysioNet environment variable(s) detected: ..."
+
+`RICU_PHYSIONET_USER` / `RICU_PHYSIONET_PASS` are set. Rename them to
+`PHYSIONET_USER` and `PHYSIONET_PASS`.
+
+## Downloads
+
+### "PhysioNet denied access to ..."
+
+MIMIC-III, MIMIC-IV and eICU are credentialed: you need a PhysioNet account
+with approved access and the signed data use agreement for each dataset. The
+open demos (`mimic_iii_demo`, `mimic_iv_demo`, `eicu_demo`) download without
+credentials. In an interactive session a refusal prints
+"PhysioNet refused these credentials, or the account has not signed the data
+use agreement for this dataset." and asks again.
+
+```r
+download_source("mimic_iv_demo")                    # open, no credentials
+Sys.setenv(PHYSIONET_USER = "me", PHYSIONET_PASS = "...")
+download_source("mimic_iv", tables = c("patients", "admissions"))
+```
+
+### A download stopped part way
+
+Run the same call again. Partial files are kept as `.part` files and resumed
+("resuming from ..."); files already verified against `SHA256SUMS.txt` are
+skipped. A file that does not match the manifest is reported and preserved,
+not overwritten.
+
+## Project configuration
+
+### The wrong project config is used
+
+When no config is loaded with `ehr_use_config()`, path helpers such as
+`ehr_paths()` (used by every stage) load `EHR_CONFIG` or, if unset,
+`config/ehr_config.json` relative to the working directory, and make it the
+active config. A stray `config/` folder in the working directory therefore
+wins over the defaults. Load the config explicitly and check what was resolved:
+
+```r
+ehr_use_config("~/projects/sepsis/config/ehr_config.json")
+#> rendehR: project config loaded from '...'
+ehr_config()$config_path
+ehr_check_config(src_name = "mimic_iv")    # prints resolved paths and problems
+```
+
+`ehr_config_path()` is different: it returns the path of a file shipped with
+the package (`inst/extdata`), not your project config.
+
+### "Config file not found: config/ehr_config.json"
+
+No config was passed and none exists in the working directory. Pass a path,
+set `EHR_CONFIG`, or create one with `ehr_create_config_template()`.
+
+## Memory, time and resuming
+
+### Full data runs out of memory or takes hours
+
+Cohort import always uses DuckDB. Give it limits and a spill directory, and
+lower the chunk threshold for very large tables (MIMIC-III `chartevents`):
+
+```r
+run_one_source("mimic_iii",
+  loading = loading_options(memory_limit = "24GB", threads = 8,
+                            temp_directory = "/scratch/duckdb_tmp",
+                            table_chunk_rows = 2e6))
+```
+
+The same arguments exist on `import_cohort_general()`. Adding the
+`cache_raw_parquet` stage once avoids re-parsing compressed CSVs on later runs.
+With `engine = "duckdb"` PostgreSQL is not used, but the PostgreSQL-only
+stages (annotations, comorbidities, ISS, external concepts, harmonization) are
+skipped. For a PostgreSQL bulk load, `loading_options(unlogged = TRUE,
+set_logged = TRUE)` is faster.
+
+### An import was interrupted
+
+Run the same call again. If the selection and settings are unchanged you see
+"Resuming an in-progress staging build from the last attempt." Chunks already
+recorded as done are skipped; any chunk being written again is first deleted
+from the staging table and re-inserted, so a kill mid-chunk leaves no
+duplicates. If the settings changed, the message is "Discarding an
+incompatible in-progress staging build ..." and the build starts fresh.
+
+In `run_db()`, a table found partly loaded is reported as
+"Resuming <table>: found n of m rows; truncating and reloading."
+
+## Re-running stages
+
+### "Current cohort is complete; no rebuild needed."
+
+With the default `execution_options(overwrite = FALSE)`, `run_one_source()`
+reuses a complete raw cache, cohort Parquet and loaded cohort tables. A
+cohort built from a different selection stops with "The existing cohort
+artifact at ... was built from a different cohort selection than this call
+requests." An incomplete artifact stops with "The current cohort artifact is
+incomplete or invalid". Rebuild, or use a separate `base_dir`:
+
+```r
+run_one_source("mimic_iv_demo", execution = execution_options(overwrite = TRUE))
+run_one_source("mimic_iv_demo", stages = "run_concepts")   # one stage only
+```
+
+`overwrite` does not control whether concept SQL or harmonization rebuilds
+their tables. Selected stages run in pipeline order; inputs of omitted stages
+must already exist.
+
+## Concepts and units
+
+### "N problem(s) in the concept config for source '...'; rows with a skip problem are not built"
+
+A row has an unknown or missing `itm_class` (allowed: `itm_itm`, `rgx_itm`,
+`rgx_exp_itm`, `col_itm`) or an empty `match_value` for a class other than
+`col_itm`. Check a file before running:
+
+```r
+validate_concept_config("config/my_concepts.csv", src_name = "mimic_iv")
+```
+
+### "`user_concepts` file not found: ..."
+
+The path in `concept_options(user_concepts = ...)` does not exist relative to
+the working directory. Use an absolute path. A user concept replaces every
+shipped row with the same source and concept name.
+
+### Values are NULL but the raw text is there
+
+Values are parsed as numbers only when they look numeric; censored text such
+as `<0.5` becomes `NULL`. With `conversion = "map"`, a unit missing from
+`rendehr_concepts_unit_conversion_map.csv` that does not match the target
+unit is also set to `NULL`. In both cases `value_raw` keeps the original
+text. Add the unit and factor to the map to keep those values.
+
+### Implausible values are still in the data
+
+The pipeline does not drop out-of-range values. Range cleaning is opt-in:
+
+```r
+vitals <- clean_by_range(fetch_concepts("mimic_iv_demo", c("heart_rate", "resp_rate")),
+                         src_name = "mimic_iv_demo", action = "na")
+wide <- load_merged_ts_wide("rendehr_admission", spec, clean = "range")
+```
+
+`fetch_concepts_wide()` takes the same `clean = "range"`. Concepts without
+bounds are listed with "clean = \"range\": no min/max bound for: ..." and
+left unchanged.
+
+## eICU specifics
+
+### There are no dates
+
+eICU stores offsets in minutes, not timestamps: window tables have
+`admittime` 0, and `time_since_hadm_min` counts from the hospital admission
+as in MIMIC. Cohorts are selected per ICU unit stay
+(`patientunitstayid`), so a merged eICU admission holds only the selected
+unit stays.
+
+### Medication orders with a blank drug name
+
+`run_raw_mods()` names them from `drughiclseqno` using the shipped
+`rendehr_eicu_hicl_drugname_lookup.csv`. To use your own lookup (for
+example one built from full eICU), put a file with the same name in the
+project config directory; it replaces the shipped one. A missing file stops
+with "Raw-mod lookup file not found: ...".
+
+## Merged schema
+
+### "... belong to a later ICU stay of the same admission; the admission-level merge keeps the first ICU stay."
+
+At `analysis_level = "admission"` the merged `flat` and `cohort_info` hold
+one row per admission, from its first ICU stay. For one row per ICU stay,
+build the ICU timeline first and merge into a separate schema:
+
+```r
+make_icu_timeline("mimic_iv")
+merge_sources(c("mimic_iv", "eicu"), target_schema = "rendehr_icu",
+              analysis_level = "icu")
+```
+
+Without the timeline the merge stops with "Run make_icu_timeline(...) before
+merge_sources(analysis_level = 'icu')."
+
+## Explorer
+
+`run_explorer()` serves individual-level data and listens on `127.0.0.1` by
+default. Do not deploy it publicly or bind it to `0.0.0.0` on a shared
+machine. Without stored credentials, an app built from a saved bundle runs
+offline ("Offline (bundle only)"): pages that read the database live are
+unavailable.
+
+```r
+d <- explorer_data("rendehr_admission", raw_dirs = c(mimic_iv = "data/source_data/mimic_iv"))
+saveRDS(d, "bundle.rds")
+shiny::runApp(explorer_app(readRDS("bundle.rds")))
+```
+
+The subject page's Verify check compares harmonized laboratory values with
+the raw files. "No raw laboratory file or values found for this patient (raw
+data directory not configured?)." means neither `raw_dirs` nor the paths
+from `ehr_paths()` lead to the raw tables; pass `raw_dirs` to
+`run_explorer()` or `explorer_data()`.
+
+## Reporting a bug
+
+Open an issue at <https://github.com/ATE-DRIVEN-lab/rendehR/issues> with the
+source, backend, `packageVersion("rendehR")`, the call and the full message.
+Never include credentials or patient-level data.

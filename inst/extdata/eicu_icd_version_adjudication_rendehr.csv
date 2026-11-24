@@ -1,0 +1,2 @@
+raw_code,compact_code,selected_version,review_status,rationale
+V42.7,V427,,ambiguous,"The code exists in both ICD-9 and ICD-10, so no single version is scored."

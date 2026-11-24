@@ -1,0 +1,116 @@
+---
+title: "The guided setup assistant"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{The guided setup assistant}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+source("precompute-setup.R")
+unlink(file.path(docs_root, c("assistant-project", "assistant-sepsis")), recursive = TRUE)
+```
+
+`ehr_setup_assistant()` turns a set of choices into a readable R script: project
+configuration, download, cohort build, pipeline stages and, optionally, the
+analysis and merge calls. Planning is read-only. The assistant never downloads
+data or runs a pipeline; you review the script and run the blocks yourself, or
+let it write the script to a file.
+
+```{r scid-plan}
+sci <- ehr_setup_assistant(
+  src_name = "mimic_iv_demo",
+  cohort = "scid", import_scope = "hospital",
+  base_dir = file.path(docs_root, "assistant-project"),
+  interactive = FALSE
+)
+names(sci)
+sci$choices[c("src_name", "cohort", "import_scope", "engine", "db_name")]
+```
+
+The generated script starts with the project and the download, then shows each
+pipeline stage as its own block:
+
+```{r script-head}
+cat(head(sci$script, 24), sep = "\n")
+```
+
+A harder case combines the sepsis variant, a multi-source plan, ICU-level
+analysis and a merge at the same grain:
+
+```{r sepsis-plan}
+sepsis <- ehr_setup_assistant(
+  src_name = c("mimic_iv_demo", "eicu_demo"),
+  cohort = "sepsis3", sepsis_bundle = "first_sepsis3_admission",
+  import_scope = "hospital", pipeline = "full",
+  analysis_level = "icu", merge = "icu",
+  memory_limit = "4GB", threads = 2,
+  base_dir = file.path(docs_root, "assistant-sepsis"),
+  interactive = FALSE
+)
+sepsis$choices[c("src_names", "cohort", "sepsis_bundle", "import_scope",
+                 "pipeline", "analysis_level", "merge")]
+```
+
+To keep the script, either ask for it at planning time or write the returned
+plan later:
+
+```{r save, eval = FALSE}
+plan <- ehr_setup_assistant(..., save_script = TRUE,
+                            setup_script_path = "setup.R")
+write_setup_script(plan, "setup.R", overwrite = TRUE)
+```
+
+## What the assistant chooses
+
+**Cohort and scope.** The cohort may be SCI, a custom ICD list, Sepsis-3 or
+the whole source. `import_scope` then decides how much
+context is kept: `icu` keeps the selected stays, `hospital` keeps the admission
+and its sibling ICU stays, `patient` keeps every encounter of the selected
+patients. SCI and custom ICD cohorts select admissions on MIMIC, so ICU scope is
+not offered there; sepsis selects ICU stays and accepts all three. The default
+for Sepsis-3 is `hospital`, matching `build_sepsis_cohort()`.
+
+**Analysis level and merge.** These are independent. The analysis level decides
+how the harmonized tables are grained; the merge decides whether the pooled
+schema is written at admission or ICU grain. An ICU merge builds the ICU
+timeline tables even when the analysis level is admission.
+
+**Engine.** A DuckDB plan loads the raw data, builds the generic cohort
+information and runs the concept layers that DuckDB supports, then stops. To
+continue in PostgreSQL, generate a PostgreSQL plan and start at `run_db()`,
+reusing the cohort Parquet.
+
+**Configuration.** The assistant can write missing configuration files, use an
+existing project, or skip configuration. It never overwrites an existing
+`ehr_config.json` or credentials file. In manual mode the script writes a
+comment between creating and loading the configuration, but it does not pause
+execution; run the generated blocks one at a time. Paths are recorded as absolute paths, and
+the nearest existing ancestor must be writable.
+
+## Sepsis variants in the assistant
+
+| `sepsis_bundle` | Packaged selection |
+|:--|:--|
+| `sepsis3` | Every qualifying ICU stay |
+| `first_sepsis3` | First-ever ICU stay, if it qualifies |
+| `sepsis3_admission` | Suspicion within ±1 day of ICU admission |
+| `first_sepsis3_admission` | Both restrictions |
+
+The assistant only assembles calls; the definitions themselves are the packaged
+SQL described in `vignette("sepsis-cohort-definitions")`.
+
+## Non-interactive use
+
+With `interactive = FALSE` the assistant returns the plan immediately. Values
+you leave out take the documented defaults (MIMIC-IV demo, SCI cohort, patient
+scope), so a non-interactive call is a reproducible way to generate a standard
+script. An invalid explicit combination fails during planning instead of being
+silently widened.
+
+## Related articles
+
+- `vignette("projects")`: what the generated configuration contains
+- `vignette("pipeline")`: the stages the full script runs
+- `vignette("cohorts")`: the selection interface behind the cohort choices

@@ -1,0 +1,110 @@
+{
+  "mimic_iv": {
+    "tables": {
+      "d_items": {
+        "id": "itemid",
+        "label": "label",
+        "category": "category",
+        "unit": "unitname",
+        "note": "ICU charted items \u2014 chartevents, inputevents, outputevents"
+      },
+      "d_labitems": {
+        "id": "itemid",
+        "label": "label",
+        "category": "category",
+        "unit": null,
+        "note": "Lab items \u2014 labevents",
+        "specimen": "fluid"
+      },
+      "d_icd_diagnoses": {
+        "id": "icd_code",
+        "label": "long_title",
+        "category": null,
+        "unit": null,
+        "note": "ICD-9 and ICD-10 diagnosis codes",
+        "code_version": "icd_version"
+      },
+      "d_icd_procedures": {
+        "id": "icd_code",
+        "label": "long_title",
+        "category": null,
+        "unit": null,
+        "note": "ICD-9 and ICD-10 procedure codes",
+        "code_version": "icd_version"
+      },
+      "d_hcpcs": {
+        "id": "code",
+        "label": "long_description",
+        "category": "category",
+        "unit": null,
+        "note": "HCPCS codes \u2014 procedures and supplies"
+      }
+    }
+  },
+  "mimic_iii": {
+    "tables": {
+      "d_items": {
+        "id": "itemid",
+        "label": "label",
+        "category": "category",
+        "unit": "unitname",
+        "note": "ICU charted items \u2014 chartevents, inputevents, outputevents"
+      },
+      "d_labitems": {
+        "id": "itemid",
+        "label": "label",
+        "category": "category",
+        "unit": null,
+        "note": "Lab items \u2014 labevents",
+        "specimen": "fluid"
+      },
+      "d_icd_diagnoses": {
+        "id": "icd9_code",
+        "label": "long_title",
+        "category": null,
+        "unit": null,
+        "note": "ICD-9 diagnosis codes"
+      },
+      "d_icd_procedures": {
+        "id": "icd9_code",
+        "label": "long_title",
+        "category": null,
+        "unit": null,
+        "note": "ICD-9 procedure codes"
+      },
+      "d_cpt": {
+        "id": "subsectionrange",
+        "label": "subsectionheader",
+        "category": "sectionheader",
+        "unit": null,
+        "note": "CPT code sections"
+      }
+    }
+  },
+  "eicu": {
+    "note": "eICU has no central dictionary tables. ehr_find() performs DISTINCT scans on data tables directly. Results are regex-class; use the matching event_table in draft_config_row() accordingly.",
+    "tables": {
+      "lab": {
+        "id": "labname",
+        "label": "labname",
+        "category": null,
+        "unit": null,
+        "note": "Lab results \u2014 distinct labnames from lab table"
+      },
+      "medication": {
+        "id": "drugname",
+        "label": "drugname",
+        "category": null,
+        "unit": null,
+        "note": "Medications \u2014 distinct drugnames from medication table"
+      },
+      "infusiondrug": {
+        "id": "drugname",
+        "label": "drugname",
+        "category": null,
+        "unit": null,
+        "note": "Infusion drugs \u2014 distinct drugnames from infusiondrug table"
+      }
+    }
+  }
+}

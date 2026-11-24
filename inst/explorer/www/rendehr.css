@@ -1,0 +1,140 @@
+/* rendehR explorer: the few rules bslib's "shiny" preset does not cover.
+   Colours come from the theme (app.R) through Bootstrap's --bs-* variables. */
+
+:root {
+  --rh-radius: 0.625rem;
+  --rh-radius-sm: 0.4rem;
+  --rh-card-gap: 1.15rem;
+}
+
+/* Soft rounding without changing the slate-blue theme. */
+.card, .bslib-card, .bslib-value-box, .modal-content, .accordion-item {
+  border-radius: var(--rh-radius) !important;
+}
+.form-control, .form-select, .btn, .bootstrap-select > .dropdown-toggle,
+.dataTables_filter input, .dt-buttons .btn {
+  border-radius: var(--rh-radius-sm) !important;
+}
+.bslib-gap-spacing, .bslib-mb-spacing { --bslib-mb-spacing: var(--rh-card-gap); }
+.layout-columns { --bslib-column-gap: var(--rh-card-gap); }
+.rh-stat-row { gap: var(--rh-card-gap) !important; margin-bottom: 0.35rem; }
+
+/* One page surface: a light grey behind white cards, a white bar on top. */
+body { background-color: #f4f5f7; }
+.navbar { background-color: #fff; border-bottom: 1px solid var(--bs-border-color); }
+.navbar .nav-link .bi { opacity: 0.75; }
+/* Medium screens: the full menu must fit on one line before it collapses. */
+@media (min-width: 992px) and (max-width: 1279.98px) {
+  .navbar .nav-link .bi { display: none; }
+  .navbar .nav-link { padding-left: 0.45rem !important; padding-right: 0.45rem !important; }
+}
+/* Pages with a sidebar fill the window; the sidebar is white and runs the full height. */
+.html-fill-container > .bslib-sidebar-layout { --_sidebar-bg: #fff; }
+.bslib-sidebar-layout > .main { background-color: transparent; }
+/* Page-level tabs (not inside a card) sit apart from the content below them. */
+.tab-pane > .nav-underline, .tab-pane > div > .nav-underline, .main > div > .nav-underline { margin-bottom: 1rem; }
+
+/* Headline numbers: compact, sentence-case title, tabular figures. */
+.bslib-value-box.rh-stat .value-box-area { padding: 1rem 1.25rem; }
+.bslib-value-box.rh-stat .value-box-title { font-size: 0.875rem; color: var(--bs-secondary-color); margin-bottom: 0.25rem; }
+/* Icon in the top-right corner, title and number on the left. */
+.bslib-value-box.rh-stat .value-box-grid .value-box-area { align-self: start; }
+.bslib-value-box.rh-stat .value-box-showcase {
+  color: var(--bs-primary); padding: 0.85rem 1rem 0 0 !important;
+}
+.bslib-value-box.rh-stat .value-box-showcase .bi {
+  width: 1.35rem !important; height: 1.35rem !important; fill: currentColor !important;
+  padding: 0.45rem; border-radius: var(--rh-radius-sm);
+  background: color-mix(in srgb, var(--bs-primary) 12%, transparent);
+}
+/* Boxes in one row share the height of the tallest; titles wrap between words only. */
+.bslib-value-box.rh-stat { min-height: 6.25rem; }
+.bslib-value-box.rh-stat .value-box-area { padding: 0.85rem 1.1rem; }
+.bslib-value-box.rh-stat .value-box-title { overflow-wrap: normal; word-break: normal; hyphens: none; }
+.bslib-value-box.rh-stat .rh-stat-sub { font-size: 0.8125rem; color: var(--bs-secondary-color); margin: 0.15rem 0 0; }
+.bslib-value-box.rh-success .value-box-showcase { color: var(--bs-success); }
+.bslib-value-box.rh-danger .value-box-showcase { color: var(--bs-danger); }
+.bslib-value-box.rh-warning .value-box-showcase { color: var(--bs-warning); }
+.bslib-value-box.rh-stat .value-box-value { font-size: 1.5rem; font-weight: 600; line-height: 1.2; font-variant-numeric: tabular-nums; margin-bottom: 0; overflow-wrap: anywhere; }
+@container bslib-value-box (max-width: 300px) {
+  .bslib-value-box.rh-stat .value-box-value { font-size: 1.3rem; }
+  /* keep the icon beside the title in narrow boxes (bslib would stack it above) */
+  .bslib-value-box.rh-stat .value-box-grid { grid-template-columns: 1fr 2.75rem !important; grid-template-areas: "left right" !important; }
+  .bslib-value-box.rh-stat .value-box-grid .value-box-showcase { grid-area: right !important; }
+  .bslib-value-box.rh-stat .value-box-grid .value-box-area { grid-area: left !important; justify-content: start; }
+}
+
+/* Buttons keep their natural width in cards (a card body would stretch them); w-100 opts out. */
+.bslib-card .card-body > .btn:not(.w-100), .bslib-card .card-body > .shiny-download-link:not(.w-100) { align-self: flex-start; }
+/* Column headers start with a capital, whatever the data frame calls the column. */
+table.dataTable thead th::first-letter { text-transform: uppercase; }
+/* Buttons at their natural width in a row (cards would stretch each one). */
+.rh-button-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.rh-steps .btn { height: 100%; }
+
+/* What a page shows before it has anything to show. */
+.rh-empty { text-align: center; padding: 2.25rem 1rem; border: 1px dashed var(--bs-border-color);
+  border-radius: var(--rh-radius); background: #fff; }
+.rh-empty .bi { color: var(--bs-secondary-color); margin-bottom: 0.65rem; }
+.rh-empty p { max-width: 34rem; margin: 0 auto; color: var(--bs-secondary-color); text-wrap: pretty; }
+
+/* Cohort Explorer: selection size and filter state above the filters. */
+.rh-selection { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.rh-selection strong { font-size: 1.125rem; font-variant-numeric: tabular-nums; }
+.rh-attrition { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.45rem; }
+.rh-attrition .rh-step {
+  display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.55rem;
+  border: 1px solid var(--bs-border-color); border-radius: 999px; background: #fff;
+  font-size: 0.75rem; color: var(--bs-secondary-color); font-variant-numeric: tabular-nums;
+}
+.rh-attrition .rh-step strong { font-size: 0.8125rem; color: var(--bs-body-color); }
+.rh-attrition .rh-step-arrow { color: var(--bs-border-color); font-size: 0.7rem; }
+.rh-header-compact .bslib-value-box.rh-stat { min-height: 5.5rem; }
+.rh-pulse-note { font-size: 0.8125rem; color: var(--bs-secondary-color); margin: 0.25rem 0 0; }
+
+/* shinyWidgets pickers drawn like the other select boxes, not like buttons. */
+.bootstrap-select > .dropdown-toggle,
+.bootstrap-select > .dropdown-toggle.btn-light,
+.bootstrap-select > .dropdown-toggle.btn-default {
+  background-color: var(--bs-body-bg);
+  border: var(--bs-border-width) solid var(--bs-border-color);
+  color: var(--bs-body-color);
+  font-weight: 400;
+  font-size: inherit;
+  line-height: 1.5;
+  padding: 0.375rem 0.75rem;
+  text-align: start;
+}
+.bootstrap-select .filter-option-inner-inner { font-weight: 400; }
+
+/* DataTables: numbers line up; export buttons sized like the rest of the page. */
+table.dataTable td { font-variant-numeric: tabular-nums; }
+.rh-dt-top, .rh-dt-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.rh-dt-top { margin-bottom: 0.5rem; }
+.rh-dt-bottom { margin-top: 0.5rem; font-size: 0.8125rem; color: var(--bs-secondary-color); }
+.rh-dt-end { justify-content: flex-end; }
+.rh-dt-top .dt-buttons, .rh-dt-top .dataTables_filter, .rh-dt-bottom .dataTables_length,
+.rh-dt-bottom .dataTables_info, .rh-dt-bottom .dataTables_paginate { margin: 0 !important; padding: 0 !important; float: none !important; }
+.rh-dt-top .dt-buttons { margin-left: auto !important; }
+.dataTables_filter input { margin-left: 0.5rem; }
+.dt-buttons .btn { font-size: 0.8125rem; padding: 0.2rem 0.6rem; background-color: transparent; color: var(--bs-body-color); border-color: var(--bs-border-color); }
+.dt-buttons .btn:hover { background-color: var(--bs-tertiary-bg); }
+
+pre.shiny-text-output { font-size: 0.8125rem; max-height: 480px; overflow: auto; }
+
+/* Plotly writes its own font on every label; use the page's. */
+.js-plotly-plot .plotly .main-svg text { font-family: var(--bs-body-font-family) !important; }
+
+/* Identifiers never break across lines. */
+.rh-id { white-space: nowrap; }
+
+/* Eleven Cohort Explorer tabs fit one line at 1366 px */
+#ex-tab { --bs-nav-underline-gap: 0.75rem; }
+
+/* Navbar database + cohort pickers: compact next to Manage. */
+.rh-cohort-pick { max-width: 34rem; }
+.rh-cohort-pick .form-select, .rh-cohort-pick .shiny-input-container {
+  margin-bottom: 0 !important; min-height: 0;
+}
+.rh-cohort-pick .shiny-input-container { width: auto; }
+.rh-cohort-list code { font-size: 0.875rem; }

@@ -1,0 +1,56 @@
+concept_name,table,output_type,unit,description
+age,flat,numeric,years,"Age at hospital admission, one decimal, capped at 90"
+sex,flat,character,,Sex
+race,flat,character,,Race or ethnicity
+insurance,flat,character,,Insurance
+language,flat,character,,Language
+marital_status,flat,character,,Marital status
+height,flat,numeric,cm,Height
+weight_admit,flat,numeric,kg,Weight at admission
+admission_type,flat,character,,Admission type
+admission_service,flat,character,,Admitting service
+hospital_admission_location,flat,character,,Where the patient came from
+hospital_discharge_location,flat,character,,Discharge destination
+care_site,flat,character,,Hospital or care site label
+icu_first_careunit,flat,character,,First ICU care unit
+icu_last_careunit,flat,character,,Last ICU care unit
+hospital_los,flat,numeric,days,Hospital length of stay
+icu_los,flat,numeric,days,ICU length of stay
+hospital_mortality,flat,logical,,Died in hospital
+icu_mortality,flat,logical,,Died in the ICU
+readmission_30d,flat,logical,,Readmitted within 30 days
+time_to_death_from_admission,flat,numeric,days,Time from hospital admission to death
+time_to_death_from_discharge,flat,numeric,days,Time from hospital discharge to death
+iss,flat,numeric,,Injury Severity Score (run_iss)
+niss,flat,numeric,,New Injury Severity Score (run_iss)
+maxais,flat,numeric,,Highest known Abbreviated Injury Scale (run_iss)
+iss_status,flat,character,,Why iss is missing (run_iss)
+injury_mechanism,flat,character,,Injury mechanism from external-cause codes (run_iss)
+injury_intent,flat,character,,Injury intent from external-cause codes (run_iss)
+injury_cause_status,flat,character,,Why injury_mechanism and injury_intent are missing (run_iss)
+is_only_hos,cohort_info,logical,,The patient has a single hospital admission
+num_hos,cohort_info,numeric,,Number of hospital admissions of the patient
+seq_hos,cohort_info,numeric,,Order of this admission among the patient's admissions
+diag_icd_codes,cohort_info,character,,All diagnosis codes of the admission
+diag_icd_codes_long_title,cohort_info,character,,Titles of all diagnosis codes
+num_diag_icd_codes,cohort_info,numeric,,Number of diagnosis codes
+scid_trauma_types,cohort_info,character,,Trauma statuses of the SCI codes
+scid_injury_location,cohort_info,character,,Anatomical regions of the SCI codes
+scid_injury_level,cohort_info,character,,Specific levels of the SCI codes
+scid_icd_codes,cohort_info,character,,SCI codes of the admission
+scid_icd_codes_long_title,cohort_info,character,,Titles of the SCI codes
+num_scid_icd_codes,cohort_info,numeric,,Number of SCI codes
+top_level,cohort_info,character,,SCI top-level category
+second_level,cohort_info,character,,SCI second-level category
+scid_nontrauma_l1,cohort_info,character,,Non-traumatic SCI etiology (level 1)
+scid_nontrauma_l2,cohort_info,character,,Non-traumatic SCI etiology (level 2)
+proc_icd_codes,cohort_info,character,,All procedure codes of the admission
+proc_icd_long_titles,cohort_info,character,,Titles of all procedure codes
+proc_treatment_categories,cohort_info,character,,Treatment categories of the classified procedures
+proc_body_systems,cohort_info,character,,Body systems of the classified procedures
+num_proc_icd_codes,cohort_info,numeric,,Number of procedure codes
+num_proc_icd_codes_classified,cohort_info,numeric,,Number of procedure codes in the SCI procedure classification
+has_operative_proc,cohort_info,logical,,Had an SCI-relevant operative procedure
+proc_body_systems_ambiguous,cohort_info,logical,,A classified code maps to more than one body system
+proc_classification_status,cohort_info,character,,Why the procedure columns are missing
+cohort_index,cohort_info,logical,,The admission is a cohort member

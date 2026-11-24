@@ -1,0 +1,121 @@
+# The MCP server and the agent skills
+
+The package ships a Model Context Protocol server and three agent
+skills. The server exposes the concept dictionary and a read-only view
+of a loaded database; the skills tell an agent how to use them. Both are
+versioned with the package: since 1.0.0 the MCP version equals the
+package version, and `rendehr_status` reports both.
+
+## Starting the server
+
+The server is a stdio process launched by R. Its entry point is
+installed with the package:
+
+``` r
+system.file("mcp", "inst", "scripts", "rendehr_mcp.R", package = "rendehR")
+```
+
+Register it once in Claude Code:
+
+``` bash
+claude mcp add rendehr -s user \
+  -e R_LIBS_USER=/path/to/R/library \
+  -e EHR_CONFIG=/abs/path/to/config/ehr_config.json \
+  -- /usr/bin/Rscript --vanilla \
+     "$(Rscript -e 'cat(system.file("mcp","inst","scripts","rendehr_mcp.R", package="rendehR"))')"
+```
+
+The same server in a JSON client configuration:
+
+``` json
+{
+  "mcpServers": {
+    "rendehr": {
+      "type": "stdio",
+      "command": "/usr/bin/Rscript",
+      "args": ["--vanilla", "/path/to/rendehR/mcp/inst/scripts/rendehr_mcp.R"],
+      "env": {"EHR_CONFIG": "/abs/path/to/config/ehr_config.json"}
+    }
+  }
+}
+```
+
+Claude Desktop reads the same block from `claude_desktop_config.json`,
+without the `type` field. `EHR_CONFIG` is needed only by the tools that
+read a database. The credentials file is the same nested
+`{"postgres": {...}}` file the pipeline uses, and the `PG*` environment
+variables override it. The server never prompts: in a non-interactive
+client, a missing credential is an error with a message, not a password
+request.
+
+## The tools
+
+| Tool                         | Reads                                           |
+|:-----------------------------|:------------------------------------------------|
+| `rendehr_status`             | Package and MCP versions, capabilities          |
+| `check_setup`                | Configuration and paths (not a connection test) |
+| `search_concept_definitions` | The packaged concept dictionary                 |
+| `list_topics`                | Cached dictionary topics                        |
+| `resolve_term`               | A term or a list of terms to dictionary topics  |
+| `draft_config_row`           | Builds one dictionary row from a template       |
+| `ehr_find`                   | Raw dictionary item labels in a loaded database |
+| `list_loaded_concepts`       | Concepts already loaded for a source            |
+| `cohort_summary`             | Cohort counts and demographics for a source     |
+
+All tools are read-only; database sessions open read-only with a
+30-second timeout. `ehr_find` is a database tool: it needs the raw
+dictionary tables declared in `inst/config/mcp_dict_tables.json`, and
+`src` is required. Its `limit` applies across tables in round-robin
+order, `tables` accepts 1–6 table names, and `expand_synonyms` defaults
+to `TRUE`.
+
+`draft_config_row` refuses to invent a row: the template must match
+exactly one existing row (`template_match_value` disambiguates), the
+item class must be `itm_itm`, `rgx_itm`, `rgx_exp_itm` or `col_itm`, the
+concept name must not already exist, and it must match
+`^[a-z][a-z0-9_]*$`.
+
+`list_loaded_concepts` returns the full `total` and the first `limit`
+rows under `rows`, so the inventory size is explicit. `cohort_summary`
+returns an error when the source has no cohort tables in the configured
+database.
+
+## The skills
+
+Three skills ship with the server:
+
+- `rendehr-user` — setup and readiness, discovery and export, custom
+  cohorts, merging, and run-and-verify workflows;
+- `rendehr-add-concept` — finding items and drafting a dictionary row;
+- `rendehr-add-source` — the wizard and the source contract.
+
+Install them into the agent’s skill directory:
+
+``` bash
+cp -r "$(Rscript -e 'cat(system.file("mcp","skills", package="rendehR"))')"/rendehr-* \
+      ~/.claude/skills/
+```
+
+The skills complement the tools: the tools answer a query, the skills
+carry the procedure around it (which tool to call first, what to verify,
+which files the result belongs in).
+[`vignette("concepts")`](https://ate-driven-lab.github.io/rendehR/articles/concepts.md)
+shows the concept workflow the `rendehr-add-concept` skill automates.
+
+## A session
+
+A status call reports the versions and whether a configuration was
+found; a search then queries the dictionary without touching a database.
+Once a project database is configured, `ehr_find` can look up an item
+label and `draft_config_row` can turn the match into a candidate concept
+row for review. Every step is read-only: writing the row, running the
+concept and importing the result stay in the user’s control.
+
+## Related articles
+
+- [`vignette("concepts")`](https://ate-driven-lab.github.io/rendehR/articles/concepts.md):
+  the dictionary and user SQL, in full
+- [`vignette("adding-a-new-source")`](https://ate-driven-lab.github.io/rendehR/articles/adding-a-new-source.md):
+  the source contract the add-source skill follows
+- [`vignette("guided-setup-assistant")`](https://ate-driven-lab.github.io/rendehR/articles/guided-setup-assistant.md):
+  the R-side planning tool

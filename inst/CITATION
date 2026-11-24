@@ -1,0 +1,21 @@
+citHeader("To cite rendehR in publications, please use the preprint:")
+
+bibentry(
+  bibtype = "Article",
+  title = "rendehR: a cohort-first, provenance-aware, agentic-ready pipeline for harmonizing multi-source electronic health records",
+  author = c(person("Marzieh", "Mussavi Rizi"), person("Vladyslav", "Shein"), person("Abel", "Torres-Espin")),
+  journal = "medRxiv",
+  year = "2026",
+  note = "Preprint",
+  doi = "10.64898/2026.11.19.26367722"
+)
+
+bibentry(
+  bibtype = "Manual",
+  header = "To cite the software itself:",
+  title = "rendehR: Multi-Source EHR Harmonization Pipeline",
+  author = c(person("Marzieh", "Mussavi Rizi"), person("Vladyslav", "Shein"), person("Abel", "Torres-Espin")),
+  year = "2026",
+  note = paste("R package version", meta$Version),
+  url = "https://github.com/ATE-DRIVEN-lab/rendehR"
+)

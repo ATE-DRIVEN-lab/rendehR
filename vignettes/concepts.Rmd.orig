@@ -1,0 +1,142 @@
+---
+title: "Concepts: the dictionary, the layers, and your own SQL"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Concepts: the dictionary, the layers, and your own SQL}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+source("precompute-setup.R")
+ehr_use_config(file.path(docs_root, "rendehr-demo/config/ehr_config.json"))
+ehr_connect()
+```
+
+A concept is one clinical quantity with a fixed name and unit, extracted the
+same way from every source. rendehR builds concepts in layers, and records where
+each one came from.
+
+## The layers
+
+| Layer | Origin |
+|:--|:--|
+| `flat` | One row per admission, from the packaged dictionary |
+| `ts` | Time series, from the packaged dictionary |
+| `dur` | Durations, from the packaged dictionary |
+| `ehr` | Derived concepts adapted from MIT-LCP `mimic-code` |
+| `user` | Your SQL, in the project |
+| `external` | Registered external SQL modules |
+
+`list_concepts()` reports the name, schema and provenance of every concept
+available for a source:
+
+```{r list}
+concepts <- list_concepts("mimic_iv_demo")
+table(concepts$schema)
+concepts[concepts$concept_name %in% c("lactate", "creatinine", "sofa"),
+         c("concept_name", "schema", "origin_name")]
+```
+
+`concept_summary()` answers the other question: what did one concept actually
+produce?
+
+```{r summary}
+concept_summary("mimic_iv_demo", "lactate")
+```
+
+The packaged dictionary is two CSVs, `rendehr_concepts_config.csv` for time
+series and `rendehr_duration_concepts_config.csv` for durations: one row per
+item, with the source table, the match value, the unit and the plausible range.
+Concept names are the package's own: `resp_rate`, not `respiratory_rate`. The
+item class says how `match_value` is read: `itm_itm` is a list of item IDs,
+`rgx_itm` an exact list of labels, `rgx_exp_itm` a regular expression, and
+`col_itm` reads a whole column. A concept can also be assembled from several
+items with a required unit, which is how a value such as `norepinephrine_exp`
+stays comparable across sources.
+
+`validate_concept_config()` checks a dictionary file or data frame and lists
+each invalid row. A row with a missing or unknown item class, or with an empty
+`match_value` outside `col_itm`, is skipped; `run_concepts()` runs the same
+check and reports every problem in one warning.
+
+```{r validate}
+rows <- data.frame(
+  source = "mimic_iv", concept_name = c("heart_rate", "my_hr"),
+  table_name = "chartevents", itm_class = "itm_itm",
+  match_value = c("220045", "")
+)
+validate_concept_config(rows)[, c("row", "concept_name", "rule", "severity")]
+```
+
+## A concept of your own
+
+User SQL lives in the project's `sql/<source>/concepts_sqls/user/` folder. Each
+file creates one table named after the concept; a rerun replaces that table.
+The SQL runs with the source's concept and raw schemas on the search path, so it
+can read existing concepts directly.
+
+```{r write-sql}
+user_dir <- file.path(docs_root, "rendehr-demo/sql/mimic_iv_demo/concepts_sqls/user")
+dir.create(user_dir, recursive = TRUE, showWarnings = FALSE)
+writeLines(c(
+  "-- Highest creatinine per ICU stay, and when it first appeared.",
+  "CREATE TABLE creatinine_peak AS",
+  "SELECT subject_id, hadm_id, stay_id,",
+  "       MIN(time_since_hadm_min) AS time_since_hadm_min,",
+  "       MAX(value) AS value,",
+  "       MIN(unit) AS unit",
+  "FROM creatinine",
+  "GROUP BY subject_id, hadm_id, stay_id;"
+), file.path(user_dir, "creatinine_peak.sql"))
+```
+
+The output has to look like the layer it belongs to:
+
+- **time series**: the source identifiers (`select_id_cols`, here
+  `subject_id`, `hadm_id`, `stay_id`), `time_since_hadm_min`, `value` and `unit`;
+- **duration**: the same columns plus `duration_min`;
+- **flat**: the source identifiers and one value per admission, with no time
+  column.
+
+The classifier reads the columns, so the contract is what decides where the
+concept lands. Run only the user layer while you iterate:
+
+```{r run-user}
+run_concepts("mimic_iv_demo", layers = "user")
+```
+
+The new concept is then a normal concept: it appears in `list_concepts()` and
+can be fetched like any other.
+
+```{r fetch-user}
+concepts <- list_concepts("mimic_iv_demo")
+concepts[concepts$concept_name == "creatinine_peak", ]
+peak <- fetch_concepts("mimic_iv_demo", "creatinine_peak")
+head(peak)
+```
+
+Files are run in alphabetical order across `user/` and its subfolders; a
+`manifest.csv` with a `sql_path` column can override the order.
+
+## External modules
+
+An external module is a folder of SQL with its own schema, registered in the
+project or passed with `external_sql_dir`. `run_external_concepts()` executes
+it, and `save_adapted = TRUE` writes an adapted copy for you to inspect. The
+external layer is disabled in a DuckDB run.
+
+## Finding items for a concept
+
+The MCP server exposes the dictionary to an agent: `ehr_find` searches item
+labels in the raw dictionary tables, and `draft_config_row` builds a dictionary
+row from a template, a table and a match value. Both are read-only.
+`vignette("mcp")` shows the setup; `vignette("pipeline")` shows how concept
+layers fit into a run.
+
+## Related articles
+
+- `vignette("harmonized-data")`: reading the concepts once they are merged
+- `vignette("sepsis-cohort-definitions")`: the packaged sepsis SQL, as a worked
+  example of a multi-concept definition
+- `vignette("mcp")`: finding and drafting concept rows with an agent

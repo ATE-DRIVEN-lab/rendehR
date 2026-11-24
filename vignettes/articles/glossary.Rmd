@@ -1,0 +1,66 @@
+---
+title: "Glossary"
+---
+
+Terms used across the documentation and the explorer.
+
+**Admission level / ICU level.** The unit a merged table has one row per:
+a hospital admission (with its first ICU stay) or an ICU stay. Chosen with
+`analysis_level` in `merge_sources()`.
+
+**Cohort.** The admissions or ICU stays a study is about, selected before any
+large table is imported (by ICD codes, a SQL definition such as Sepsis-3, or a
+list of identifiers). See `vignette("cohorts")`.
+
+**Cohort-first.** rendehR's order of work: define the cohort, then import only
+its rows. A study of a few thousand patients never loads the full event tables.
+
+**Cohort admission / context admission.** A cohort admission is flagged as a
+member in `cohort_info` (`cohort_index`); the patient's other admissions are
+kept as context, so history before and after the index stay is available.
+
+**Concept.** A clinical variable defined once and extracted from every source:
+heart rate, lactate, norepinephrine exposure. Its definition (items, unit,
+conversion, plausible range) is a row of the concept configuration. See
+`vignette("concepts")` and the [concept dictionary](concept-dictionary.html).
+
+**Flat / ts / dur.** The three harmonized tables: *flat* has one row per
+admission or ICU stay (age, sex, outcomes, length of stay); *ts* (time series)
+has one row per measurement with its time; *dur* (durations) has one row per
+exposure interval (a drug infusion, ventilation). See
+`vignette("harmonized-data")`.
+
+**Harmonized schema / merged schema.** The per-source schema
+(`<source>_coh_harmonized`) holds one source's flat, ts and dur tables in the
+common format; the merged schema (by default `rendehr`) stacks every source,
+with `source_data` naming the origin of each row.
+
+**Index admission.** A patient's first cohort admission; patient-level
+analyses (survival, counts of patients) use it.
+
+**Plausible range.** The bounds of a concept in its configuration. The pipeline
+keeps every value; `clean_by_range()`, or `clean = "range"` in the wide loaders,
+removes values outside them when an analysis asks for it.
+
+**Provenance.** The record of where each concept comes from: source table,
+item codes, SQL and unit conversion, kept in a registry and shown by
+`list_concepts()` and in the explorer.
+
+**Project.** A folder with a configuration file (`config/ehr_config.json`),
+credentials, raw data and outputs, loaded with `ehr_use_config()`. See
+`vignette("projects")`.
+
+**Small-cell rule.** Counts of 1-9 are shown as `<10` in the explorer, together
+with any number from which such a count could be recovered, so that
+screenshots and tables cannot identify individuals.
+
+**Source.** One database (for example `mimic_iv` or `mimic_iv_demo`), described
+in the source registry. See [Data sources](data-sources.html).
+
+**Stage.** One step of the pipeline run by `run_one_source()`: import the
+cohort, load the database, build windows, extract concepts, harmonize. See
+`vignette("pipeline")`.
+
+**Time since admission.** Every time in the harmonized tables is given in
+minutes since hospital admission (`time_since_hadm_min`) and, when there is an
+ICU stay, since ICU admission (`time_since_icu_min`).

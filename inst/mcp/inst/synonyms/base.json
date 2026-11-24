@@ -1,0 +1,18 @@
+{
+  "cpp": ["cerebral perfusion pressure", "perfusion pressure cerebral"],
+  "pp":  ["perfusion pressure", "pulse pressure"],
+  "icp": ["intracranial pressure", "intra cranial pressure", "intracranial"],
+  "map": ["mean arterial pressure", "arterial pressure mean", "mean arterial bp"],
+  "sbp": ["systolic blood pressure", "arterial bp systolic", "systolic bp", "systolic arterial"],
+  "dbp": ["diastolic blood pressure", "arterial bp diastolic", "diastolic bp"],
+  "hr":  ["heart rate", "pulse rate"],
+  "gcs": ["glasgow coma scale", "glasgow coma score", "gcs total", "gcs score"],
+  "paco2": ["pco2", "partial pressure co2", "carbon dioxide", "co2 arterial", "arterial co2"],
+  "pt":  ["prothrombin time", "protime", "pro time"],
+  "sofa": ["sequential organ failure", "sofa score"],
+  "cci": ["charlson comorbidity", "charlson index", "comorbidity index"],
+  "temperature": ["temp", "body temperature", "core temperature"],
+  "spo2": ["oxygen saturation", "pulse ox", "o2 saturation"],
+  "fio2": ["fraction inspired oxygen", "inspired oxygen fraction"],
+  "chloride": ["cl", "serum chloride", "venous chloride", "chloride ion"]
+}
